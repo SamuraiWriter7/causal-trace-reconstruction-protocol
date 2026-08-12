@@ -1,0 +1,59 @@
+schema_version: "0.2.0"
+record_type: causal-validation
+
+validation_id: validation-thermal-002
+reconstruction_id: recon-thermal-002
+hypothesis_id: hypothesis.thermal-protection
+comparison_id: comparison-thermal-001
+
+evidence_checks:
+
+  - check_id: check-001
+    evidence_ref: ev-001
+    assessment: supports
+    rationale: >
+      The device temperature exceeded the configured thermal threshold.
+
+  - check_id: check-002
+    evidence_ref: ev-002
+    assessment: supports
+    rationale: >
+      The protection-controller log records thermal activation.
+
+  - check_id: check-003
+    evidence_ref: ev-003
+    assessment: supports
+    rationale: >
+      Service throughput dropped after controller activation.
+
+counterfactual_tests:
+
+  - test_id: cf-thermal-001
+
+    intervention: >
+      Keep device temperature below the configured thermal threshold.
+
+    expected_if_hypothesis_true: >
+      Thermal protection should not activate and thermal throttling
+      should not occur.
+
+    observed_or_simulated_result: >
+      Protection did not activate and the corresponding throttling
+      event did not occur.
+
+    supports_hypothesis: true
+    confidence: 0.91
+
+competing_hypothesis_refs:
+  - hypothesis.workload-saturation
+
+conclusion:
+  status: supported
+  confidence: 0.90
+  rationale: >
+    Trace convergence, direct evidence, comparative analysis and
+    counterfactual testing all support the thermal-protection hypothesis.
+  blocking_issues:
+    - Exact controller propagation latency remains unresolved.
+
+validated_at: "2026-08-12T00:04:00Z"
