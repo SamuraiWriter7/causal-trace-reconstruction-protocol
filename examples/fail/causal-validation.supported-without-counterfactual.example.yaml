@@ -1,19 +1,22 @@
 schema_version: "0.4.0"
 record_type: causal-validation
 
-validation_id: validation-invalid-003
+validation_id: validation-invalid-004
 reconstruction_id: recon-thermal-002
 hypothesis_id: hypothesis.thermal-protection
+
 comparison_id: comparison-thermal-001
 temporal_assessment_id: temporal-thermal-001
+necessity_sufficiency_assessment_id: ns-thermal-001
 
 evidence_checks:
   - check_id: invalid-check-001
     evidence_ref: ev-001
     assessment: supports
-    rationale: Temperature threshold violation was observed.
+    rationale: >
+      Temperature threshold violation was observed.
 
-counterfactual_tests: []
+counterfactual_branch_refs: []
 
 competing_hypothesis_refs:
   - hypothesis.workload-saturation
@@ -23,7 +26,7 @@ conclusion:
   confidence: 0.90
   rationale: >
     The hypothesis is incorrectly classified as supported
-    without counterfactual testing.
+    without any counterfactual branch.
   blocking_issues: []
 
-validated_at: "2026-08-12T00:05:00Z"
+validated_at: "2026-08-12T03:05:00Z"
