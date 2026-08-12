@@ -1,0 +1,126 @@
+schema_version: "0.5.0"
+record_type: ctrp-conformance-assessment
+
+conformance_id: conformance-thermal-001
+reconstruction_id: recon-thermal-002
+hypothesis_id: hypothesis.thermal-protection
+validation_id: validation-thermal-004
+
+required_stage_checks:
+
+  - stage: observation
+    status: present
+    record_refs:
+      - obs-thermal-001
+    rationale: >
+      The source causal observation is present and provides
+      the evidence base for the reconstruction workflow.
+
+  - stage: forward-trace
+    status: present
+    record_refs:
+      - fwd-thermal-001
+    rationale: >
+      Cause-forward reasoning is present and traces the proposed
+      causal mechanism from the observed initiating condition.
+
+  - stage: backward-trace
+    status: present
+    record_refs:
+      - bwd-thermal-001
+    rationale: >
+      Outcome-backward reasoning is present and traces candidate
+      causal requirements backward from the observed outcome.
+
+  - stage: reconstruction
+    status: present
+    record_refs:
+      - recon-thermal-002
+    rationale: >
+      The forward and backward traces are reconciled into
+      candidate causal hypotheses.
+
+  - stage: temporal-assessment
+    status: present
+    record_refs:
+      - temporal-thermal-001
+    rationale: >
+      Temporal precedence and causal-window constraints were
+      evaluated for the selected thermal-protection hypothesis.
+
+  - stage: hypothesis-comparison
+    status: present
+    record_refs:
+      - comparison-thermal-001
+    rationale: >
+      Active causal hypotheses were compared and ranked
+      without bypassing competing explanations.
+
+  - stage: counterfactual-branching
+    status: present
+    record_refs:
+      - cf-thermal-necessity-001
+      - cf-thermal-sufficiency-001
+    rationale: >
+      Explicit necessity and sufficiency counterfactual branches
+      were evaluated for the thermal-protection hypothesis.
+
+  - stage: necessity-sufficiency
+    status: present
+    record_refs:
+      - ns-thermal-001
+    rationale: >
+      The causal role of the proposed factor was assessed
+      within the declared evaluation scope.
+
+  - stage: causal-validation
+    status: present
+    record_refs:
+      - validation-thermal-004
+    rationale: >
+      The reconstructed hypothesis received final causal
+      validation after evidence, temporal, counterfactual,
+      and causal-role assessment.
+
+bypass_checks:
+
+  - rule_id: CTRP-BYPASS-001
+    status: passed
+    description: >
+      The causal validation references an existing causal
+      reconstruction and does not bypass reconstruction.
+
+  - rule_id: CTRP-BYPASS-002
+    status: passed
+    description: >
+      The supported validation references a valid temporal
+      precedence assessment.
+
+  - rule_id: CTRP-BYPASS-003
+    status: passed
+    description: >
+      The supported validation references explicit
+      counterfactual branches.
+
+  - rule_id: CTRP-BYPASS-004
+    status: passed
+    description: >
+      The supported validation references a valid necessity
+      and sufficiency assessment.
+
+  - rule_id: CTRP-BYPASS-006
+    status: passed
+    description: >
+      The causal reconstruction remains hypothesis-level
+      and is not promoted to proven causality.
+
+reference_integrity:
+  status: valid
+  checked_refs: 10
+  broken_refs: []
+
+conformance_status: conformant
+
+blocking_issues: []
+
+assessed_at: "2026-08-12T04:00:00Z"
