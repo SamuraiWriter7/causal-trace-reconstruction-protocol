@@ -1,8 +1,8 @@
 {
   "$schema": "https://json-schema.org/draft/2020-12/schema",
-  "$id": "urn:causal-trace-reconstruction-protocol:schema:causal-validation:0.3.0",
+  "$id": "urn:causal-trace-reconstruction-protocol:schema:causal-validation:0.4.0",
   "title": "Causal Validation",
-  "description": "Validates a specific reconstructed causal hypothesis using evidence checks, counterfactual tests, temporal precedence assessment, and competing hypotheses.",
+  "description": "Validates a specific reconstructed causal hypothesis using evidence checks, temporal precedence, counterfactual branches, necessity and sufficiency assessment, and competing hypotheses.",
   "type": "object",
   "additionalProperties": false,
 
@@ -13,8 +13,9 @@
     "reconstruction_id",
     "hypothesis_id",
     "temporal_assessment_id",
+    "necessity_sufficiency_assessment_id",
     "evidence_checks",
-    "counterfactual_tests",
+    "counterfactual_branch_refs",
     "competing_hypothesis_refs",
     "conclusion",
     "validated_at"
@@ -22,7 +23,7 @@
 
   "properties": {
     "schema_version": {
-      "const": "0.3.0"
+      "const": "0.4.0"
     },
 
     "record_type": {
@@ -31,12 +32,14 @@
 
     "validation_id": {
       "type": "string",
-      "minLength": 1
+      "minLength": 1,
+      "description": "Unique identifier for this causal validation record."
     },
 
     "reconstruction_id": {
       "type": "string",
-      "minLength": 1
+      "minLength": 1,
+      "description": "Reference to the causal reconstruction containing the hypothesis being validated."
     },
 
     "hypothesis_id": {
@@ -54,7 +57,13 @@
     "temporal_assessment_id": {
       "type": "string",
       "minLength": 1,
-      "description": "Reference to the temporal precedence assessment for the hypothesis."
+      "description": "Reference to the temporal precedence assessment associated with the hypothesis."
+    },
+
+    "necessity_sufficiency_assessment_id": {
+      "type": "string",
+      "minLength": 1,
+      "description": "Reference to the causal necessity and sufficiency assessment associated with the hypothesis."
     },
 
     "evidence_checks": {
@@ -62,14 +71,18 @@
       "minItems": 1,
       "items": {
         "$ref": "#/$defs/evidenceCheck"
-      }
+      },
+      "description": "Evidence-level assessments supporting, contradicting, or otherwise informing the causal hypothesis."
     },
 
-    "counterfactual_tests": {
+    "counterfactual_branch_refs": {
       "type": "array",
+      "uniqueItems": true,
       "items": {
-        "$ref": "#/$defs/counterfactualTest"
-      }
+        "type": "string",
+        "minLength": 1
+      },
+      "description": "References to structured counterfactual branches used to evaluate the hypothesis."
     },
 
     "competing_hypothesis_refs": {
@@ -107,13 +120,14 @@
       "properties": {
         "check_id": {
           "type": "string",
-          "minLength": 1
+          "minLength": 1,
+          "description": "Unique identifier for this evidence check within the validation record."
         },
 
         "evidence_ref": {
           "type": "string",
           "minLength": 1,
-          "description": "Reference to an evidence item from the source causal observation."
+          "description": "Reference to an evidence item from the corresponding causal observation."
         },
 
         "assessment": {
@@ -127,56 +141,8 @@
 
         "rationale": {
           "type": "string",
-          "minLength": 1
-        }
-      }
-    },
-
-    "counterfactualTest": {
-      "type": "object",
-      "additionalProperties": false,
-
-      "required": [
-        "test_id",
-        "intervention",
-        "expected_if_hypothesis_true",
-        "observed_or_simulated_result",
-        "supports_hypothesis",
-        "confidence"
-      ],
-
-      "properties": {
-        "test_id": {
-          "type": "string",
-          "minLength": 1
-        },
-
-        "intervention": {
-          "type": "string",
           "minLength": 1,
-          "description": "Counterfactual intervention applied to the proposed causal mechanism or condition."
-        },
-
-        "expected_if_hypothesis_true": {
-          "type": "string",
-          "minLength": 1,
-          "description": "Expected result under the intervention if the causal hypothesis is correct."
-        },
-
-        "observed_or_simulated_result": {
-          "type": "string",
-          "minLength": 1,
-          "description": "Observed, experimentally obtained, or simulated counterfactual result."
-        },
-
-        "supports_hypothesis": {
-          "type": "boolean"
-        },
-
-        "confidence": {
-          "type": "number",
-          "minimum": 0,
-          "maximum": 1
+          "description": "Explanation of why the referenced evidence receives the stated assessment."
         }
       }
     },
@@ -199,19 +165,21 @@
             "plausible",
             "supported",
             "rejected"
-          ]
+          ],
+          "description": "Final validation status of the causal hypothesis. Supported does not imply proven causality."
         },
 
         "confidence": {
           "type": "number",
           "minimum": 0,
           "maximum": 1,
-          "description": "Assessment confidence. This value does not represent proof of causality."
+          "description": "Confidence in the validation assessment. This value does not represent proof or a universal causal probability."
         },
 
         "rationale": {
           "type": "string",
-          "minLength": 1
+          "minLength": 1,
+          "description": "Overall explanation of the validation conclusion."
         },
 
         "blocking_issues": {
@@ -219,7 +187,8 @@
           "items": {
             "type": "string",
             "minLength": 1
-          }
+          },
+          "description": "Known limitations, unresolved issues, or conditions preventing stronger causal conclusions."
         }
       }
     }
