@@ -1,47 +1,95 @@
-schema_version: "0.1.0"
+schema_version: "0.2.0"
 record_type: causal-reconstruction
-reconstruction_id: recon-thermal-001
+
+reconstruction_id: recon-thermal-002
 observation_id: obs-thermal-001
-forward_trace_id: fwd-thermal-001
-backward_trace_id: bwd-thermal-001
+
+forward_trace_ids:
+  - fwd-thermal-001
+
+backward_trace_ids:
+  - bwd-thermal-001
 
 claim_level: hypothesis
 
-causal_hypothesis: >
-  The thermal threshold violation activated the protection controller,
-  which then caused the observed service throttling.
+candidate_hypotheses:
 
-meeting_points:
-  - meeting_point_id: meet-001
-    forward_step_id: fwd-step-001
-    backward_step_id: bwd-step-001
-    state_id: state.protection-active
-    match_score: 0.96
-    rationale: >
-      The forward trace reaches protection-controller activation and the
-      backward trace identifies the same state as a required predecessor
-      of the throttled outcome.
+  - hypothesis_id: hypothesis.thermal-protection
+
+    statement: >
+      The thermal threshold violation activated the protection controller,
+      which caused the observed service throttling.
+
+    meeting_points:
+      - meeting_point_id: meet-thermal-001
+        forward_step_id: fwd-step-001
+        backward_step_id: bwd-step-001
+        state_id: state.protection-active
+        match_score: 0.96
+        rationale: >
+          Both forward and backward inference independently converge
+          on protection-controller activation.
+
+    candidate_path:
+      - segment_id: thermal-segment-001
+        from_state_id: state.temp-high
+        to_state_id: state.protection-active
+        basis_step_refs:
+          - fwd-step-001
+          - bwd-step-002
+
+      - segment_id: thermal-segment-002
+        from_state_id: state.protection-active
+        to_state_id: state.service-throttled
+        basis_step_refs:
+          - fwd-step-002
+          - bwd-step-001
+
+    evidence_refs:
+      - ev-001
+      - ev-002
+      - ev-003
+
     contradictions: []
 
-candidate_path:
-  - segment_id: segment-001
-    from_state_id: state.temp-high
-    to_state_id: state.protection-active
-    basis_step_refs:
-      - fwd-step-001
-      - bwd-step-002
+    unresolved_gaps:
+      - Exact controller-to-service propagation latency is unknown.
 
-  - segment_id: segment-002
-    from_state_id: state.protection-active
-    to_state_id: state.service-throttled
-    basis_step_refs:
-      - fwd-step-002
-      - bwd-step-001
+    confidence: 0.91
+    status: active
+
+  - hypothesis_id: hypothesis.workload-saturation
+
+    statement: >
+      The service may have been throttled primarily because of workload
+      saturation rather than thermal protection.
+
+    meeting_points: []
+
+    candidate_path: []
+
+    evidence_refs:
+      - ev-003
+
+    contradictions:
+      - contradiction_id: contradiction-workload-001
+        description: >
+          The protection-controller log records thermal protection
+          activation immediately before throttling.
+        evidence_refs:
+          - ev-002
+
+    unresolved_gaps:
+      - No direct workload-saturation measurement is available.
+      - No forward trace currently establishes a workload path.
+
+    confidence: 0.38
+    status: active
 
 reconstruction_status: converged
-confidence: 0.91
 
 unresolved_gaps:
   - Exact activation latency remains unverified.
+  - Workload saturation cannot yet be completely excluded.
 
-created_at: "2026-08-11T00:03:00Z"
+created_at: "2026-08-12T00:03:00Z"
