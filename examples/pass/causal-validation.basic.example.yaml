@@ -1,0 +1,45 @@
+schema_version: "0.1.0"
+record_type: causal-validation
+validation_id: validation-thermal-001
+reconstruction_id: recon-thermal-001
+
+evidence_checks:
+  - check_id: evidence-check-001
+    evidence_ref: ev-001
+    assessment: supports
+    rationale: The temperature threshold violation was directly measured.
+
+  - check_id: evidence-check-002
+    evidence_ref: ev-002
+    assessment: supports
+    rationale: The controller log directly records thermal protection activation.
+
+  - check_id: evidence-check-003
+    evidence_ref: ev-003
+    assessment: supports
+    rationale: Throughput reduction followed controller activation.
+
+counterfactual_tests:
+  - test_id: cf-001
+    intervention: Keep device temperature below the configured protection threshold.
+    expected_if_hypothesis_true: Thermal protection should not activate and thermal throttling should not occur.
+    observed_or_simulated_result: Under the controlled test condition, protection did not activate and throttling did not occur.
+    supports_hypothesis: true
+    confidence: 0.91
+
+alternative_hypotheses:
+  - hypothesis_id: alt-001
+    description: Service throttling was caused by workload saturation rather than thermal protection.
+    confidence: 0.24
+    status: less-supported
+
+conclusion:
+  status: supported
+  confidence: 0.89
+  rationale: >
+    Forward and backward traces converge, controller evidence supports the
+    proposed mechanism, and the counterfactual test behaves as predicted.
+  blocking_issues:
+    - Exact hardware-controller latency remains unresolved.
+
+validated_at: "2026-08-11T00:04:00Z"
