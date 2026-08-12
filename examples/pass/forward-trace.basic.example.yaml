@@ -1,4 +1,4 @@
-schema_version: "0.1.0"
+schema_version: "0.2.0"
 record_type: forward-trace
 trace_id: fwd-thermal-001
 observation_id: obs-thermal-001
