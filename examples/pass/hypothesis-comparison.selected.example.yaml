@@ -1,0 +1,44 @@
+schema_version: "0.2.0"
+record_type: hypothesis-comparison
+
+comparison_id: comparison-thermal-001
+reconstruction_id: recon-thermal-002
+
+scoring_method: ctrp-reference-comparison-v0.2
+
+entries:
+
+  - hypothesis_id: hypothesis.thermal-protection
+    path_coherence: 0.96
+    evidence_support: 0.94
+    contradiction_penalty: 0.02
+    gap_penalty: 0.08
+    final_score: 0.89
+    rank: 1
+    rationale: >
+      Forward and backward traces converge on the same mechanism,
+      with direct sensor and controller evidence and no material
+      contradictory evidence.
+
+  - hypothesis_id: hypothesis.workload-saturation
+    path_coherence: 0.35
+    evidence_support: 0.31
+    contradiction_penalty: 0.55
+    gap_penalty: 0.62
+    final_score: 0.38
+    rank: 2
+    rationale: >
+      Workload saturation remains logically possible but lacks a
+      reconstructed forward path and conflicts with controller evidence.
+
+tie_threshold: 0.10
+selection_margin: 0.51
+
+decision:
+  status: selected
+  selected_hypothesis_id: hypothesis.thermal-protection
+  rationale: >
+    The leading hypothesis exceeds the competing hypothesis by more
+    than the configured ambiguity threshold.
+
+compared_at: "2026-08-12T00:03:30Z"
