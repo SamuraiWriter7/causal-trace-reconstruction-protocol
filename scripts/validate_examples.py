@@ -19,7 +19,7 @@ SCHEMA_DIR = ROOT / "schemas"
 PASS_DIR = ROOT / "examples" / "pass"
 FAIL_DIR = ROOT / "examples" / "fail"
 
-VERSION = "0.3.0"
+VERSION = "0.4.0"
 
 SCHEMA_FILES = {
     "causal-observation": "causal-observation.schema.json",
@@ -30,6 +30,10 @@ SCHEMA_FILES = {
         "temporal-precedence-assessment.schema.json"
     ),
     "hypothesis-comparison": "hypothesis-comparison.schema.json",
+    "counterfactual-branch": "counterfactual-branch.schema.json",
+    "causal-necessity-sufficiency-assessment": (
+        "causal-necessity-sufficiency-assessment.schema.json"
+    ),
     "causal-validation": "causal-validation.schema.json",
 }
 
@@ -41,7 +45,7 @@ TemporalResult = Literal[
 
 
 # ---------------------------------------------------------------------------
-# Loading and schema validation
+# Loading and JSON Schema validation
 # ---------------------------------------------------------------------------
 
 
@@ -108,7 +112,6 @@ def schema_errors(
         Draft202012Validator,
     ],
 ) -> list[str]:
-
     record_type = document.get(
         "record_type"
     )
@@ -119,10 +122,14 @@ def schema_errors(
             f"{record_type!r}"
         ]
 
-    validator = validators[record_type]
+    validator = validators[
+        record_type
+    ]
 
     errors = sorted(
-        validator.iter_errors(document),
+        validator.iter_errors(
+            document
+        ),
         key=lambda error: [
             str(part)
             for part in error.absolute_path
@@ -143,7 +150,6 @@ def schema_errors(
 def document_id(
     document: dict[str, Any],
 ) -> str | None:
-
     record_type = document.get(
         "record_type"
     )
@@ -161,6 +167,10 @@ def document_id(
             "assessment_id",
         "hypothesis-comparison":
             "comparison_id",
+        "counterfactual-branch":
+            "branch_id",
+        "causal-necessity-sufficiency-assessment":
+            "assessment_id",
         "causal-validation":
             "validation_id",
     }
@@ -174,7 +184,10 @@ def document_id(
 
     value = document.get(key)
 
-    if isinstance(value, str):
+    if isinstance(
+        value,
+        str,
+    ):
         return value
 
     return None
@@ -191,7 +204,6 @@ def build_registry(
         dict[str, Any],
     ],
 ]:
-
     registry: dict[
         str,
         dict[
@@ -204,6 +216,7 @@ def build_registry(
         record_type = document.get(
             "record_type"
         )
+
         identifier = document_id(
             document
         )
@@ -228,7 +241,6 @@ def build_registry(
 def evidence_ids_for_observation(
     observation: dict[str, Any],
 ) -> set[str]:
-
     result: set[str] = set()
 
     for evidence in observation.get(
@@ -256,31 +268,26 @@ def reconstruction_hypotheses(
     str,
     dict[str, Any],
 ]:
-
     result: dict[
         str,
         dict[str, Any],
     ] = {}
 
-    for hypothesis in (
-        reconstruction.get(
-            "candidate_hypotheses",
-            [],
-        )
+    for hypothesis in reconstruction.get(
+        "candidate_hypotheses",
+        [],
     ):
-        hypothesis_id = (
-            hypothesis.get(
-                "hypothesis_id"
-            )
+        hypothesis_id = hypothesis.get(
+            "hypothesis_id"
         )
 
         if isinstance(
             hypothesis_id,
             str,
         ):
-            result[hypothesis_id] = (
-                hypothesis
-            )
+            result[
+                hypothesis_id
+            ] = hypothesis
 
     return result
 
@@ -292,7 +299,6 @@ def trace_step_ids(
         dict[str, Any],
     ],
 ) -> set[str]:
-
     result: set[str] = set()
 
     for trace_id in trace_ids:
@@ -322,6 +328,15 @@ def trace_step_ids(
     return result
 
 
+def has_duplicates(
+    values: list[Any],
+) -> bool:
+    return (
+        len(values)
+        != len(set(values))
+    )
+
+
 # ---------------------------------------------------------------------------
 # Temporal helpers
 # ---------------------------------------------------------------------------
@@ -330,7 +345,6 @@ def trace_step_ids(
 def parse_datetime(
     value: str,
 ) -> datetime:
-
     normalized = value
 
     if value.endswith("Z"):
@@ -360,7 +374,6 @@ def timing_bounds(
     datetime,
     datetime,
 ] | None:
-
     kind = timing.get(
         "kind"
     )
@@ -399,7 +412,7 @@ def timing_bounds(
         )
 
     raise ValueError(
-        f"unknown timing kind: "
+        "unknown timing kind: "
         f"{kind!r}"
     )
 
@@ -415,7 +428,6 @@ def evaluate_ordering(
         datetime,
     ],
 ) -> TemporalResult:
-
     (
         cause_earliest,
         cause_latest,
@@ -427,7 +439,6 @@ def evaluate_ordering(
     ) = effect_bounds
 
     if relation == "strict-before":
-
         if (
             cause_latest
             < effect_earliest
@@ -443,7 +454,6 @@ def evaluate_ordering(
         return "unresolved"
 
     if relation == "before-or-equal":
-
         if (
             cause_latest
             <= effect_earliest
@@ -475,7 +485,6 @@ def evaluate_causal_window(
     ],
     causal_window: dict[str, Any],
 ) -> TemporalResult:
-
     (
         cause_earliest,
         cause_latest,
@@ -540,23 +549,16 @@ def evaluate_precedence_constraint(
     TemporalResult,
     str | None,
 ]:
-
-    constraint_id = (
-        constraint.get(
-            "constraint_id"
-        )
+    constraint_id = constraint.get(
+        "constraint_id"
     )
 
-    cause_event_id = (
-        constraint.get(
-            "cause_event_id"
-        )
+    cause_event_id = constraint.get(
+        "cause_event_id"
     )
 
-    effect_event_id = (
-        constraint.get(
-            "effect_event_id"
-        )
+    effect_event_id = constraint.get(
+        "effect_event_id"
     )
 
     cause_event = events_by_id.get(
@@ -607,7 +609,6 @@ def evaluate_precedence_constraint(
         TypeError,
         ValueError,
     ) as exc:
-
         return (
             "unresolved",
             (
@@ -651,10 +652,8 @@ def evaluate_precedence_constraint(
             None,
         )
 
-    causal_window = (
-        constraint.get(
-            "causal_window"
-        )
+    causal_window = constraint.get(
+        "causal_window"
     )
 
     if causal_window is None:
@@ -677,7 +676,6 @@ def evaluate_precedence_constraint(
         TypeError,
         ValueError,
     ) as exc:
-
         return (
             "unresolved",
             (
@@ -719,7 +717,6 @@ def expected_temporal_status(
         TemporalResult,
     ],
 ) -> str:
-
     satisfied_count = sum(
         result == "satisfied"
         for result
@@ -756,6 +753,75 @@ def expected_temporal_status(
 
 
 # ---------------------------------------------------------------------------
+# Counterfactual / causal-role helpers
+# ---------------------------------------------------------------------------
+
+
+def expected_causal_role(
+    necessity_status: str,
+    sufficiency_status: str,
+) -> str:
+    if (
+        necessity_status
+        == "supported"
+        and sufficiency_status
+        == "supported"
+    ):
+        return (
+            "necessary-and-sufficient"
+        )
+
+    if (
+        necessity_status
+        == "supported"
+        and sufficiency_status
+        == "not-supported"
+    ):
+        return "necessary-only"
+
+    if (
+        necessity_status
+        == "not-supported"
+        and sufficiency_status
+        == "supported"
+    ):
+        return "sufficient-only"
+
+    if (
+        necessity_status
+        == "not-supported"
+        and sufficiency_status
+        == "not-supported"
+    ):
+        return "neither-supported"
+
+    return "undetermined"
+
+
+def branch_supports_role(
+    branch: dict[str, Any],
+    expected_test_type: str,
+) -> bool:
+    return (
+        branch.get(
+            "test_type"
+        )
+        == expected_test_type
+        and branch.get(
+            "branch_status"
+        )
+        == "completed"
+        and branch.get(
+            "branch_conclusion",
+            {},
+        ).get(
+            "assessment"
+        )
+        == "supports-hypothesis"
+    )
+
+
+# ---------------------------------------------------------------------------
 # Semantic validation
 # ---------------------------------------------------------------------------
 
@@ -770,7 +836,6 @@ def semantic_errors(
         ],
     ],
 ) -> list[str]:
-
     errors: list[str] = []
 
     if (
@@ -808,15 +873,23 @@ def semantic_errors(
         {},
     )
 
-    temporal_assessments = (
-        registry.get(
-            "temporal-precedence-assessment",
-            {},
-        )
+    temporal_assessments = registry.get(
+        "temporal-precedence-assessment",
+        {},
     )
 
     comparisons = registry.get(
         "hypothesis-comparison",
+        {},
+    )
+
+    counterfactual_branches = registry.get(
+        "counterfactual-branch",
+        {},
+    )
+
+    role_assessments = registry.get(
+        "causal-necessity-sufficiency-assessment",
         {},
     )
 
@@ -828,7 +901,6 @@ def semantic_errors(
         record_type
         == "causal-observation"
     ):
-
         evidence_ids = [
             evidence.get(
                 "evidence_id"
@@ -840,9 +912,8 @@ def semantic_errors(
             )
         ]
 
-        if (
-            len(evidence_ids)
-            != len(set(evidence_ids))
+        if has_duplicates(
+            evidence_ids
         ):
             errors.append(
                 "evidence_id values "
@@ -857,17 +928,12 @@ def semantic_errors(
         "forward-trace",
         "backward-trace",
     }:
-
-        observation_id = (
-            document.get(
-                "observation_id"
-            )
+        observation_id = document.get(
+            "observation_id"
         )
 
-        observation = (
-            observations.get(
-                observation_id
-            )
+        observation = observations.get(
+            observation_id
         )
 
         if observation is None:
@@ -885,7 +951,9 @@ def semantic_errors(
         )
 
         step_ids = [
-            step.get("step_id")
+            step.get(
+                "step_id"
+            )
             for step
             in document.get(
                 "steps",
@@ -893,9 +961,8 @@ def semantic_errors(
             )
         ]
 
-        if (
-            len(step_ids)
-            != len(set(step_ids))
+        if has_duplicates(
+            step_ids
         ):
             errors.append(
                 "step_id values "
@@ -910,11 +977,9 @@ def semantic_errors(
                 "step_id"
             )
 
-            for evidence_ref in (
-                step.get(
-                    "evidence_refs",
-                    [],
-                )
+            for evidence_ref in step.get(
+                "evidence_refs",
+                [],
             ):
                 if (
                     evidence_ref
@@ -934,17 +999,12 @@ def semantic_errors(
         record_type
         == "causal-reconstruction"
     ):
-
-        observation_id = (
-            document.get(
-                "observation_id"
-            )
+        observation_id = document.get(
+            "observation_id"
         )
 
-        observation = (
-            observations.get(
-                observation_id
-            )
+        observation = observations.get(
+            observation_id
         )
 
         if observation is None:
@@ -970,8 +1030,7 @@ def semantic_errors(
 
             if trace is None:
                 errors.append(
-                    "unknown "
-                    "forward_trace_id: "
+                    "unknown forward_trace_id: "
                     f"{trace_id!r}"
                 )
                 continue
@@ -983,7 +1042,7 @@ def semantic_errors(
                 != observation_id
             ):
                 errors.append(
-                    "forward trace "
+                    f"forward trace "
                     f"{trace_id!r} "
                     "belongs to a "
                     "different observation"
@@ -996,8 +1055,7 @@ def semantic_errors(
 
             if trace is None:
                 errors.append(
-                    "unknown "
-                    "backward_trace_id: "
+                    "unknown backward_trace_id: "
                     f"{trace_id!r}"
                 )
                 continue
@@ -1009,32 +1067,26 @@ def semantic_errors(
                 != observation_id
             ):
                 errors.append(
-                    "backward trace "
+                    f"backward trace "
                     f"{trace_id!r} "
                     "belongs to a "
                     "different observation"
                 )
 
-        forward_step_ids = (
-            trace_step_ids(
-                forward_ids,
-                forward_traces,
-            )
+        forward_step_ids = trace_step_ids(
+            forward_ids,
+            forward_traces,
         )
 
-        backward_step_ids = (
-            trace_step_ids(
-                backward_ids,
-                backward_traces,
-            )
+        backward_step_ids = trace_step_ids(
+            backward_ids,
+            backward_traces,
         )
 
         all_step_ids = (
             forward_step_ids
             | backward_step_ids
         )
-
-        hypothesis_ids: list[str] = []
 
         known_evidence: set[str] = set()
 
@@ -1045,17 +1097,14 @@ def semantic_errors(
                 )
             )
 
-        for hypothesis in (
-            document.get(
-                "candidate_hypotheses",
-                [],
-            )
-        ):
+        hypothesis_ids: list[str] = []
 
-            hypothesis_id = (
-                hypothesis.get(
-                    "hypothesis_id"
-                )
+        for hypothesis in document.get(
+            "candidate_hypotheses",
+            [],
+        ):
+            hypothesis_id = hypothesis.get(
+                "hypothesis_id"
             )
 
             if isinstance(
@@ -1066,11 +1115,9 @@ def semantic_errors(
                     hypothesis_id
                 )
 
-            for evidence_ref in (
-                hypothesis.get(
-                    "evidence_refs",
-                    [],
-                )
+            for evidence_ref in hypothesis.get(
+                "evidence_refs",
+                [],
             ):
                 if (
                     evidence_ref
@@ -1093,13 +1140,8 @@ def semantic_errors(
                 )
             ]
 
-            if (
-                len(contradiction_ids)
-                != len(
-                    set(
-                        contradiction_ids
-                    )
-                )
+            if has_duplicates(
+                contradiction_ids
             ):
                 errors.append(
                     f"{hypothesis_id}: "
@@ -1107,18 +1149,13 @@ def semantic_errors(
                     "values must be unique"
                 )
 
-            for contradiction in (
-                hypothesis.get(
-                    "contradictions",
-                    [],
-                )
+            for contradiction in hypothesis.get(
+                "contradictions",
+                [],
             ):
-
-                for evidence_ref in (
-                    contradiction.get(
-                        "evidence_refs",
-                        [],
-                    )
+                for evidence_ref in contradiction.get(
+                    "evidence_refs",
+                    [],
                 ):
                     if (
                         evidence_ref
@@ -1143,13 +1180,8 @@ def semantic_errors(
                 )
             ]
 
-            if (
-                len(meeting_point_ids)
-                != len(
-                    set(
-                        meeting_point_ids
-                    )
-                )
+            if has_duplicates(
+                meeting_point_ids
             ):
                 errors.append(
                     f"{hypothesis_id}: "
@@ -1157,13 +1189,10 @@ def semantic_errors(
                     "values must be unique"
                 )
 
-            for meeting_point in (
-                hypothesis.get(
-                    "meeting_points",
-                    [],
-                )
+            for meeting_point in hypothesis.get(
+                "meeting_points",
+                [],
             ):
-
                 forward_step_id = (
                     meeting_point.get(
                         "forward_step_id"
@@ -1182,8 +1211,7 @@ def semantic_errors(
                 ):
                     errors.append(
                         f"{hypothesis_id}: "
-                        "unknown "
-                        "forward_step_id "
+                        "unknown forward_step_id "
                         f"{forward_step_id!r}"
                     )
 
@@ -1193,8 +1221,7 @@ def semantic_errors(
                 ):
                     errors.append(
                         f"{hypothesis_id}: "
-                        "unknown "
-                        "backward_step_id "
+                        "unknown backward_step_id "
                         f"{backward_step_id!r}"
                     )
 
@@ -1209,13 +1236,8 @@ def semantic_errors(
                 )
             ]
 
-            if (
-                len(segment_ids)
-                != len(
-                    set(
-                        segment_ids
-                    )
-                )
+            if has_duplicates(
+                segment_ids
             ):
                 errors.append(
                     f"{hypothesis_id}: "
@@ -1223,18 +1245,13 @@ def semantic_errors(
                     "must be unique"
                 )
 
-            for segment in (
-                hypothesis.get(
-                    "candidate_path",
-                    [],
-                )
+            for segment in hypothesis.get(
+                "candidate_path",
+                [],
             ):
-
-                for step_ref in (
-                    segment.get(
-                        "basis_step_refs",
-                        [],
-                    )
+                for step_ref in segment.get(
+                    "basis_step_refs",
+                    [],
                 ):
                     if (
                         step_ref
@@ -1247,11 +1264,8 @@ def semantic_errors(
                             f"{step_ref!r}"
                         )
 
-        if (
-            len(hypothesis_ids)
-            != len(
-                set(hypothesis_ids)
-            )
+        if has_duplicates(
+            hypothesis_ids
         ):
             errors.append(
                 "candidate hypothesis_id "
@@ -1277,8 +1291,10 @@ def semantic_errors(
             "reconstruction_status"
         )
 
-        if status == "no-convergence":
-
+        if (
+            status
+            == "no-convergence"
+        ):
             if active_hypotheses:
                 errors.append(
                     "no-convergence "
@@ -1287,13 +1303,11 @@ def semantic_errors(
                 )
 
         else:
-
             if not active_hypotheses:
                 errors.append(
-                    f"{status} "
-                    "reconstruction requires "
-                    "at least one active "
-                    "hypothesis"
+                    f"{status} reconstruction "
+                    "requires at least one "
+                    "active hypothesis"
                 )
 
         if (
@@ -1308,8 +1322,9 @@ def semantic_errors(
                 "active hypotheses"
             )
 
-        if status == "converged":
-
+        if (
+            status == "converged"
+        ):
             if not any(
                 hypothesis.get(
                     "meeting_points"
@@ -1332,17 +1347,12 @@ def semantic_errors(
         record_type
         == "temporal-precedence-assessment"
     ):
-
-        reconstruction_id = (
-            document.get(
-                "reconstruction_id"
-            )
+        reconstruction_id = document.get(
+            "reconstruction_id"
         )
 
-        reconstruction = (
-            reconstructions.get(
-                reconstruction_id
-            )
+        reconstruction = reconstructions.get(
+            reconstruction_id
         )
 
         if reconstruction is None:
@@ -1359,10 +1369,8 @@ def semantic_errors(
             )
         )
 
-        hypothesis_id = (
-            document.get(
-                "hypothesis_id"
-            )
+        hypothesis_id = document.get(
+            "hypothesis_id"
         )
 
         if (
@@ -1374,16 +1382,12 @@ def semantic_errors(
                 f"{hypothesis_id!r}"
             )
 
-        observation_id = (
-            reconstruction.get(
-                "observation_id"
-            )
+        observation_id = reconstruction.get(
+            "observation_id"
         )
 
-        observation = (
-            observations.get(
-                observation_id
-            )
+        observation = observations.get(
+            observation_id
         )
 
         known_evidence: set[str] = set()
@@ -1411,15 +1415,11 @@ def semantic_errors(
             event.get(
                 "event_id"
             )
-            for event
-            in events
+            for event in events
         ]
 
-        if (
-            len(event_ids)
-            != len(
-                set(event_ids)
-            )
+        if has_duplicates(
+            event_ids
         ):
             errors.append(
                 "temporal event_id "
@@ -1430,8 +1430,7 @@ def semantic_errors(
             event.get(
                 "event_id"
             ): event
-            for event
-            in events
+            for event in events
             if isinstance(
                 event.get(
                     "event_id"
@@ -1441,7 +1440,6 @@ def semantic_errors(
         }
 
         for event in events:
-
             event_id = event.get(
                 "event_id"
             )
@@ -1465,11 +1463,9 @@ def semantic_errors(
                     f"{exc}"
                 )
 
-            for evidence_ref in (
-                event.get(
-                    "evidence_refs",
-                    [],
-                )
+            for evidence_ref in event.get(
+                "evidence_refs",
+                [],
             ):
                 if (
                     evidence_ref
@@ -1494,13 +1490,8 @@ def semantic_errors(
             in constraints
         ]
 
-        if (
-            len(constraint_ids)
-            != len(
-                set(
-                    constraint_ids
-                )
-            )
+        if has_duplicates(
+            constraint_ids
         ):
             errors.append(
                 "constraint_id values "
@@ -1513,11 +1504,8 @@ def semantic_errors(
         ] = {}
 
         for constraint in constraints:
-
-            constraint_id = (
-                constraint.get(
-                    "constraint_id"
-                )
+            constraint_id = constraint.get(
+                "constraint_id"
             )
 
             if not isinstance(
@@ -1545,18 +1533,19 @@ def semantic_errors(
                     diagnostic
                 )
 
-            if result == "violated":
+            if (
+                result
+                == "violated"
+            ):
                 errors.append(
                     f"{constraint_id}: "
                     "temporal precedence "
                     "is violated"
                 )
 
-        declared_violations = (
-            document.get(
-                "violations",
-                [],
-            )
+        declared_violations = document.get(
+            "violations",
+            [],
         )
 
         violation_ids = [
@@ -1567,11 +1556,8 @@ def semantic_errors(
             in declared_violations
         ]
 
-        if (
-            len(violation_ids)
-            != len(
-                set(violation_ids)
-            )
+        if has_duplicates(
+            violation_ids
         ):
             errors.append(
                 "violation_id values "
@@ -1582,19 +1568,18 @@ def semantic_errors(
             list[str]
         ) = []
 
-        for violation in (
-            declared_violations
-        ):
+        for violation in declared_violations:
+            constraint_id = violation.get(
+                "constraint_id"
+            )
 
-            constraint_id = (
-                violation.get(
-                    "constraint_id"
+            if isinstance(
+                constraint_id,
+                str,
+            ):
+                declared_violated_constraint_ids.append(
+                    constraint_id
                 )
-            )
-
-            declared_violated_constraint_ids.append(
-                constraint_id
-            )
 
             if (
                 constraint_id
@@ -1606,11 +1591,9 @@ def semantic_errors(
                     f"{constraint_id!r}"
                 )
 
-            for evidence_ref in (
-                violation.get(
-                    "evidence_refs",
-                    [],
-                )
+            for evidence_ref in violation.get(
+                "evidence_refs",
+                [],
             ):
                 if (
                     evidence_ref
@@ -1622,15 +1605,8 @@ def semantic_errors(
                         f"{evidence_ref!r}"
                     )
 
-        if (
-            len(
-                declared_violated_constraint_ids
-            )
-            != len(
-                set(
-                    declared_violated_constraint_ids
-                )
-            )
+        if has_duplicates(
+            declared_violated_constraint_ids
         ):
             errors.append(
                 "each violated constraint "
@@ -1652,18 +1628,9 @@ def semantic_errors(
             declared_violated_constraint_ids
         )
 
-        missing_violation_records = (
+        for constraint_id in sorted(
             expected_violated
             - declared_violated
-        )
-
-        unexpected_violation_records = (
-            declared_violated
-            - expected_violated
-        )
-
-        for constraint_id in sorted(
-            missing_violation_records
         ):
             errors.append(
                 f"{constraint_id}: "
@@ -1672,7 +1639,8 @@ def semantic_errors(
             )
 
         for constraint_id in sorted(
-            unexpected_violation_records
+            declared_violated
+            - expected_violated
         ):
             errors.append(
                 f"{constraint_id}: "
@@ -1681,24 +1649,17 @@ def semantic_errors(
                 "violated"
             )
 
-        declared_unresolved_list = (
-            document.get(
-                "unresolved_constraints",
-                [],
-            )
+        declared_unresolved_list = document.get(
+            "unresolved_constraints",
+            [],
         )
 
         declared_unresolved = set(
             declared_unresolved_list
         )
 
-        if (
-            len(
-                declared_unresolved_list
-            )
-            != len(
-                declared_unresolved
-            )
+        if has_duplicates(
+            declared_unresolved_list
         ):
             errors.append(
                 "unresolved_constraints "
@@ -1759,10 +1720,8 @@ def semantic_errors(
             )
         )
 
-        declared_status = (
-            document.get(
-                "assessment_status"
-            )
+        declared_status = document.get(
+            "assessment_status"
         )
 
         if (
@@ -1785,17 +1744,12 @@ def semantic_errors(
         record_type
         == "hypothesis-comparison"
     ):
-
-        reconstruction_id = (
-            document.get(
-                "reconstruction_id"
-            )
+        reconstruction_id = document.get(
+            "reconstruction_id"
         )
 
-        reconstruction = (
-            reconstructions.get(
-                reconstruction_id
-            )
+        reconstruction = reconstructions.get(
+            reconstruction_id
         )
 
         if reconstruction is None:
@@ -1840,11 +1794,8 @@ def semantic_errors(
             in entries
         ]
 
-        if (
-            len(compared_ids)
-            != len(
-                set(compared_ids)
-            )
+        if has_duplicates(
+            compared_ids
         ):
             errors.append(
                 "comparison hypothesis_id "
@@ -1878,11 +1829,8 @@ def semantic_errors(
         temporal_ids: list[str] = []
 
         for entry in entries:
-
-            hypothesis_id = (
-                entry.get(
-                    "hypothesis_id"
-                )
+            hypothesis_id = entry.get(
+                "hypothesis_id"
             )
 
             temporal_assessment_id = (
@@ -1912,6 +1860,7 @@ def semantic_errors(
                     "temporal_assessment_id "
                     f"{temporal_assessment_id!r}"
                 )
+
                 continue
 
             if (
@@ -1940,11 +1889,8 @@ def semantic_errors(
                     f"{assessment.get('hypothesis_id')!r}"
                 )
 
-        if (
-            len(temporal_ids)
-            != len(
-                set(temporal_ids)
-            )
+        if has_duplicates(
+            temporal_ids
         ):
             errors.append(
                 "comparison "
@@ -1953,7 +1899,9 @@ def semantic_errors(
             )
 
         ranks = [
-            entry.get("rank")
+            entry.get(
+                "rank"
+            )
             for entry
             in entries
         ]
@@ -2014,7 +1962,10 @@ def semantic_errors(
             float | None
         )
 
-        if len(ranked_entries) >= 2:
+        if (
+            len(ranked_entries)
+            >= 2
+        ):
             expected_margin = (
                 ranked_entries[0][
                     "final_score"
@@ -2027,9 +1978,13 @@ def semantic_errors(
         else:
             expected_margin = None
 
-        if expected_margin is None:
-
-            if margin is not None:
+        if (
+            expected_margin
+            is None
+        ):
+            if (
+                margin is not None
+            ):
                 errors.append(
                     "selection_margin "
                     "must be null when "
@@ -2038,7 +1993,6 @@ def semantic_errors(
                 )
 
         else:
-
             if (
                 margin is None
                 or not math.isclose(
@@ -2061,27 +2015,20 @@ def semantic_errors(
             {},
         )
 
-        decision_status = (
-            decision.get(
-                "status"
-            )
+        decision_status = decision.get(
+            "status"
         )
 
-        tie_threshold = (
-            document.get(
-                "tie_threshold"
-            )
+        tie_threshold = document.get(
+            "tie_threshold"
         )
 
         if (
             decision_status
             == "selected"
         ):
-
-            selected_id = (
-                decision.get(
-                    "selected_hypothesis_id"
-                )
+            selected_id = decision.get(
+                "selected_hypothesis_id"
             )
 
             if (
@@ -2095,11 +2042,10 @@ def semantic_errors(
                 )
 
             if ranked_entries:
-
-                top_id = (
-                    ranked_entries[0].get(
-                        "hypothesis_id"
-                    )
+                top_id = ranked_entries[
+                    0
+                ].get(
+                    "hypothesis_id"
                 )
 
                 if (
@@ -2171,7 +2117,6 @@ def semantic_errors(
             decision_status
             == "ambiguous"
         ):
-
             if (
                 len(ranked_entries)
                 < 2
@@ -2197,24 +2142,19 @@ def semantic_errors(
                 )
 
     # -----------------------------------------------------------------------
-    # causal-validation
+    # counterfactual-branch
     # -----------------------------------------------------------------------
 
     elif (
         record_type
-        == "causal-validation"
+        == "counterfactual-branch"
     ):
-
-        reconstruction_id = (
-            document.get(
-                "reconstruction_id"
-            )
+        reconstruction_id = document.get(
+            "reconstruction_id"
         )
 
-        reconstruction = (
-            reconstructions.get(
-                reconstruction_id
-            )
+        reconstruction = reconstructions.get(
+            reconstruction_id
         )
 
         if reconstruction is None:
@@ -2231,10 +2171,8 @@ def semantic_errors(
             )
         )
 
-        hypothesis_id = (
-            document.get(
-                "hypothesis_id"
-            )
+        hypothesis_id = document.get(
+            "hypothesis_id"
         )
 
         if (
@@ -2246,16 +2184,59 @@ def semantic_errors(
                 f"{hypothesis_id!r}"
             )
 
-        observation_id = (
-            reconstruction.get(
-                "observation_id"
+        temporal_assessment_id = (
+            document.get(
+                "temporal_assessment_id"
             )
         )
 
-        observation = (
-            observations.get(
-                observation_id
+        temporal_assessment = (
+            temporal_assessments.get(
+                temporal_assessment_id
             )
+        )
+
+        if (
+            temporal_assessment
+            is None
+        ):
+            errors.append(
+                "unknown "
+                "temporal_assessment_id: "
+                f"{temporal_assessment_id!r}"
+            )
+
+        else:
+            if (
+                temporal_assessment.get(
+                    "reconstruction_id"
+                )
+                != reconstruction_id
+            ):
+                errors.append(
+                    "temporal assessment "
+                    "belongs to a different "
+                    "reconstruction"
+                )
+
+            if (
+                temporal_assessment.get(
+                    "hypothesis_id"
+                )
+                != hypothesis_id
+            ):
+                errors.append(
+                    "temporal assessment "
+                    "belongs to a different "
+                    "hypothesis"
+                )
+
+        observation_id = reconstruction.get(
+            "observation_id"
+        )
+
+        observation = observations.get(
+            observation_id
         )
 
         known_evidence: set[str] = set()
@@ -2274,7 +2255,442 @@ def semantic_errors(
                 )
             )
 
-        evidence_check_ids = [
+        step_ids = [
+            step.get(
+                "step_id"
+            )
+            for step
+            in document.get(
+                "branch_steps",
+                [],
+            )
+        ]
+
+        if has_duplicates(
+            step_ids
+        ):
+            errors.append(
+                "counterfactual branch "
+                "step_id values must "
+                "be unique"
+            )
+
+        for step in document.get(
+            "branch_steps",
+            [],
+        ):
+            step_id = step.get(
+                "step_id"
+            )
+
+            for evidence_ref in step.get(
+                "evidence_refs",
+                [],
+            ):
+                if (
+                    evidence_ref
+                    not in known_evidence
+                ):
+                    errors.append(
+                        f"{step_id}: "
+                        "unknown evidence_ref "
+                        f"{evidence_ref!r}"
+                    )
+
+        test_type = document.get(
+            "test_type"
+        )
+
+        intervention_mode = (
+            document.get(
+                "intervention",
+                {},
+            ).get(
+                "mode"
+            )
+        )
+
+        if (
+            test_type
+            == "necessity"
+        ):
+            if (
+                intervention_mode
+                not in {
+                    "suppress",
+                    "replace",
+                }
+            ):
+                errors.append(
+                    "necessity branch must "
+                    "suppress or replace "
+                    "the candidate cause"
+                )
+
+        elif (
+            test_type
+            == "sufficiency"
+        ):
+            if (
+                intervention_mode
+                != "force"
+            ):
+                errors.append(
+                    "sufficiency branch must "
+                    "force the candidate cause"
+                )
+
+        branch_status = document.get(
+            "branch_status"
+        )
+
+        counterfactual_occurrence = (
+            document.get(
+                "counterfactual_outcome",
+                {},
+            ).get(
+                "occurrence"
+            )
+        )
+
+        if (
+            branch_status
+            == "completed"
+            and counterfactual_occurrence
+            == "unknown"
+        ):
+            errors.append(
+                "completed counterfactual "
+                "branch must not have an "
+                "unknown counterfactual "
+                "outcome"
+            )
+
+        branch_assessment = (
+            document.get(
+                "branch_conclusion",
+                {},
+            ).get(
+                "assessment"
+            )
+        )
+
+        if (
+            branch_status
+            == "completed"
+            and branch_assessment
+            == "supports-hypothesis"
+        ):
+            if (
+                test_type
+                == "necessity"
+                and counterfactual_occurrence
+                != "not-occurred"
+            ):
+                errors.append(
+                    "supporting necessity "
+                    "branch requires the "
+                    "counterfactual outcome "
+                    "not to occur"
+                )
+
+            if (
+                test_type
+                == "sufficiency"
+                and counterfactual_occurrence
+                != "occurred"
+            ):
+                errors.append(
+                    "supporting sufficiency "
+                    "branch requires the "
+                    "counterfactual outcome "
+                    "to occur"
+                )
+
+    # -----------------------------------------------------------------------
+    # causal-necessity-sufficiency-assessment
+    # -----------------------------------------------------------------------
+
+    elif (
+        record_type
+        == "causal-necessity-sufficiency-assessment"
+    ):
+        reconstruction_id = document.get(
+            "reconstruction_id"
+        )
+
+        reconstruction = reconstructions.get(
+            reconstruction_id
+        )
+
+        if reconstruction is None:
+            errors.append(
+                "unknown reconstruction_id: "
+                f"{reconstruction_id!r}"
+            )
+
+            return errors
+
+        hypotheses = (
+            reconstruction_hypotheses(
+                reconstruction
+            )
+        )
+
+        hypothesis_id = document.get(
+            "hypothesis_id"
+        )
+
+        if (
+            hypothesis_id
+            not in hypotheses
+        ):
+            errors.append(
+                "unknown hypothesis_id: "
+                f"{hypothesis_id!r}"
+            )
+
+        role_specs = (
+            (
+                "necessity",
+                "necessity",
+            ),
+            (
+                "sufficiency",
+                "sufficiency",
+            ),
+        )
+
+        for (
+            field_name,
+            expected_test_type,
+        ) in role_specs:
+            role_data = document.get(
+                field_name,
+                {},
+            )
+
+            role_status = role_data.get(
+                "status"
+            )
+
+            branch_refs = role_data.get(
+                "branch_refs",
+                [],
+            )
+
+            if (
+                role_status
+                == "not-tested"
+                and branch_refs
+            ):
+                errors.append(
+                    f"{field_name} status "
+                    "'not-tested' must not "
+                    "contain branch_refs"
+                )
+
+            resolved_branches: list[
+                dict[str, Any]
+            ] = []
+
+            for branch_ref in branch_refs:
+                branch = (
+                    counterfactual_branches.get(
+                        branch_ref
+                    )
+                )
+
+                if branch is None:
+                    errors.append(
+                        f"{field_name}: "
+                        "unknown branch_ref "
+                        f"{branch_ref!r}"
+                    )
+
+                    continue
+
+                resolved_branches.append(
+                    branch
+                )
+
+                if (
+                    branch.get(
+                        "reconstruction_id"
+                    )
+                    != reconstruction_id
+                ):
+                    errors.append(
+                        f"{field_name}: "
+                        f"branch {branch_ref!r} "
+                        "belongs to a "
+                        "different reconstruction"
+                    )
+
+                if (
+                    branch.get(
+                        "hypothesis_id"
+                    )
+                    != hypothesis_id
+                ):
+                    errors.append(
+                        f"{field_name}: "
+                        f"branch {branch_ref!r} "
+                        "belongs to a "
+                        "different hypothesis"
+                    )
+
+                if (
+                    branch.get(
+                        "test_type"
+                    )
+                    != expected_test_type
+                ):
+                    errors.append(
+                        f"{field_name}: "
+                        f"branch {branch_ref!r} "
+                        "has incompatible "
+                        "test_type "
+                        f"{branch.get('test_type')!r}"
+                    )
+
+            if (
+                role_status
+                == "supported"
+            ):
+                if not branch_refs:
+                    errors.append(
+                        f"{field_name} status "
+                        "'supported' requires "
+                        "at least one branch_ref"
+                    )
+
+                elif not any(
+                    branch_supports_role(
+                        branch,
+                        expected_test_type,
+                    )
+                    for branch
+                    in resolved_branches
+                ):
+                    errors.append(
+                        f"{field_name} status "
+                        "'supported' requires "
+                        "at least one completed "
+                        "supporting "
+                        "counterfactual branch"
+                    )
+
+        necessity_status = (
+            document.get(
+                "necessity",
+                {},
+            ).get(
+                "status"
+            )
+        )
+
+        sufficiency_status = (
+            document.get(
+                "sufficiency",
+                {},
+            ).get(
+                "status"
+            )
+        )
+
+        expected_role = (
+            expected_causal_role(
+                necessity_status,
+                sufficiency_status,
+            )
+        )
+
+        declared_role = document.get(
+            "causal_role"
+        )
+
+        if (
+            declared_role
+            != expected_role
+        ):
+            errors.append(
+                "causal_role "
+                f"{declared_role!r} "
+                "is inconsistent with "
+                "necessity/sufficiency "
+                "statuses; expected "
+                f"{expected_role!r}"
+            )
+
+    # -----------------------------------------------------------------------
+    # causal-validation
+    # -----------------------------------------------------------------------
+
+    elif (
+        record_type
+        == "causal-validation"
+    ):
+        reconstruction_id = document.get(
+            "reconstruction_id"
+        )
+
+        reconstruction = reconstructions.get(
+            reconstruction_id
+        )
+
+        if reconstruction is None:
+            errors.append(
+                "unknown reconstruction_id: "
+                f"{reconstruction_id!r}"
+            )
+
+            return errors
+
+        hypotheses = (
+            reconstruction_hypotheses(
+                reconstruction
+            )
+        )
+
+        hypothesis_id = document.get(
+            "hypothesis_id"
+        )
+
+        if (
+            hypothesis_id
+            not in hypotheses
+        ):
+            errors.append(
+                "unknown hypothesis_id: "
+                f"{hypothesis_id!r}"
+            )
+
+        observation_id = reconstruction.get(
+            "observation_id"
+        )
+
+        observation = observations.get(
+            observation_id
+        )
+
+        known_evidence: set[str] = set()
+
+        if observation is None:
+            errors.append(
+                "reconstruction references "
+                "unknown observation_id: "
+                f"{observation_id!r}"
+            )
+
+        else:
+            known_evidence = (
+                evidence_ids_for_observation(
+                    observation
+                )
+            )
+
+        check_ids = [
             check.get(
                 "check_id"
             )
@@ -2285,30 +2701,20 @@ def semantic_errors(
             )
         ]
 
-        if (
-            len(evidence_check_ids)
-            != len(
-                set(
-                    evidence_check_ids
-                )
-            )
+        if has_duplicates(
+            check_ids
         ):
             errors.append(
                 "evidence check_id "
                 "values must be unique"
             )
 
-        for evidence_check in (
-            document.get(
-                "evidence_checks",
-                [],
-            )
+        for check in document.get(
+            "evidence_checks",
+            [],
         ):
-
-            evidence_ref = (
-                evidence_check.get(
-                    "evidence_ref"
-                )
+            evidence_ref = check.get(
+                "evidence_ref"
             )
 
             if (
@@ -2316,40 +2722,15 @@ def semantic_errors(
                 not in known_evidence
             ):
                 errors.append(
-                    f"{evidence_check.get('check_id')}: "
+                    f"{check.get('check_id')}: "
                     "unknown evidence_ref "
                     f"{evidence_ref!r}"
                 )
 
-        counterfactual_ids = [
-            test.get(
-                "test_id"
-            )
-            for test
-            in document.get(
-                "counterfactual_tests",
-                [],
-            )
-        ]
-
-        if (
-            len(counterfactual_ids)
-            != len(
-                set(counterfactual_ids)
-            )
+        for competing_id in document.get(
+            "competing_hypothesis_refs",
+            [],
         ):
-            errors.append(
-                "counterfactual test_id "
-                "values must be unique"
-            )
-
-        for competing_id in (
-            document.get(
-                "competing_hypothesis_refs",
-                [],
-            )
-        ):
-
             if (
                 competing_id
                 not in hypotheses
@@ -2392,7 +2773,6 @@ def semantic_errors(
             )
 
         else:
-
             if (
                 temporal_assessment.get(
                     "reconstruction_id"
@@ -2421,12 +2801,12 @@ def semantic_errors(
             "comparison_id"
         )
 
-        if comparison_id is not None:
-
-            comparison = (
-                comparisons.get(
-                    comparison_id
-                )
+        if (
+            comparison_id
+            is not None
+        ):
+            comparison = comparisons.get(
+                comparison_id
             )
 
             if comparison is None:
@@ -2447,6 +2827,108 @@ def semantic_errors(
                     "reconstruction"
                 )
 
+        branch_refs = document.get(
+            "counterfactual_branch_refs",
+            [],
+        )
+
+        resolved_branches: list[
+            dict[str, Any]
+        ] = []
+
+        for branch_ref in branch_refs:
+            branch = (
+                counterfactual_branches.get(
+                    branch_ref
+                )
+            )
+
+            if branch is None:
+                errors.append(
+                    "unknown "
+                    "counterfactual_branch_ref: "
+                    f"{branch_ref!r}"
+                )
+
+                continue
+
+            resolved_branches.append(
+                branch
+            )
+
+            if (
+                branch.get(
+                    "reconstruction_id"
+                )
+                != reconstruction_id
+            ):
+                errors.append(
+                    "counterfactual branch "
+                    f"{branch_ref!r} "
+                    "belongs to a different "
+                    "reconstruction"
+                )
+
+            if (
+                branch.get(
+                    "hypothesis_id"
+                )
+                != hypothesis_id
+            ):
+                errors.append(
+                    "counterfactual branch "
+                    f"{branch_ref!r} "
+                    "belongs to a different "
+                    "hypothesis"
+                )
+
+        role_assessment_id = document.get(
+            "necessity_sufficiency_assessment_id"
+        )
+
+        role_assessment = (
+            role_assessments.get(
+                role_assessment_id
+            )
+        )
+
+        if (
+            role_assessment
+            is None
+        ):
+            errors.append(
+                "unknown "
+                "necessity_sufficiency_assessment_id: "
+                f"{role_assessment_id!r}"
+            )
+
+        else:
+            if (
+                role_assessment.get(
+                    "reconstruction_id"
+                )
+                != reconstruction_id
+            ):
+                errors.append(
+                    "necessity/sufficiency "
+                    "assessment belongs "
+                    "to a different "
+                    "reconstruction"
+                )
+
+            if (
+                role_assessment.get(
+                    "hypothesis_id"
+                )
+                != hypothesis_id
+            ):
+                errors.append(
+                    "necessity/sufficiency "
+                    "assessment belongs "
+                    "to a different "
+                    "hypothesis"
+                )
+
         conclusion = document.get(
             "conclusion",
             {},
@@ -2458,7 +2940,6 @@ def semantic_errors(
             )
             == "supported"
         ):
-
             supporting_evidence = any(
                 check.get(
                     "assessment"
@@ -2478,33 +2959,6 @@ def semantic_errors(
                     "supporting evidence check"
                 )
 
-            tests = document.get(
-                "counterfactual_tests",
-                [],
-            )
-
-            if not tests:
-                errors.append(
-                    "supported conclusion "
-                    "requires at least one "
-                    "counterfactual test"
-                )
-
-            elif not any(
-                test.get(
-                    "supports_hypothesis"
-                )
-                is True
-                for test
-                in tests
-            ):
-                errors.append(
-                    "supported conclusion "
-                    "requires at least one "
-                    "supporting "
-                    "counterfactual test"
-                )
-
             if (
                 temporal_assessment
                 is None
@@ -2519,6 +2973,80 @@ def semantic_errors(
                     "assessment status "
                     "'consistent'"
                 )
+
+            if not branch_refs:
+                errors.append(
+                    "supported conclusion "
+                    "requires at least one "
+                    "counterfactual branch"
+                )
+
+            elif not any(
+                (
+                    branch.get(
+                        "branch_status"
+                    )
+                    == "completed"
+                    and branch.get(
+                        "branch_conclusion",
+                        {},
+                    ).get(
+                        "assessment"
+                    )
+                    == "supports-hypothesis"
+                )
+                for branch
+                in resolved_branches
+            ):
+                errors.append(
+                    "supported conclusion "
+                    "requires at least one "
+                    "completed supporting "
+                    "counterfactual branch"
+                )
+
+            if (
+                role_assessment
+                is None
+            ):
+                errors.append(
+                    "supported conclusion "
+                    "requires a valid "
+                    "necessity/sufficiency "
+                    "assessment"
+                )
+
+            else:
+                necessity_status = (
+                    role_assessment.get(
+                        "necessity",
+                        {},
+                    ).get(
+                        "status"
+                    )
+                )
+
+                sufficiency_status = (
+                    role_assessment.get(
+                        "sufficiency",
+                        {},
+                    ).get(
+                        "status"
+                    )
+                )
+
+                if (
+                    necessity_status
+                    != "supported"
+                    and sufficiency_status
+                    != "supported"
+                ):
+                    errors.append(
+                        "supported conclusion "
+                        "requires necessity "
+                        "or sufficiency "
+                        "to be supported"
+                    )
 
     return errors
 
@@ -2537,7 +3065,6 @@ def validate_pass_examples(
     list[dict[str, Any]],
     bool,
 ]:
-
     documents: list[
         dict[str, Any]
     ] = []
@@ -2555,7 +3082,6 @@ def validate_pass_examples(
     )
 
     for path in paths:
-
         print(
             f"- "
             f"{path.relative_to(ROOT)}"
@@ -2580,7 +3106,6 @@ def validate_pass_examples(
         )
 
         if errors:
-
             print(
                 "  [schema-error]"
             )
@@ -2606,7 +3131,6 @@ def validate_pass_examples(
     )
 
     for document in documents:
-
         identifier = document_id(
             document
         )
@@ -2617,9 +3141,8 @@ def validate_pass_examples(
         )
 
         if errors:
-
             print(
-                "  [semantic-error] "
+                f"  [semantic-error] "
                 f"{identifier}"
             )
 
@@ -2631,9 +3154,8 @@ def validate_pass_examples(
             success = False
 
         else:
-
             print(
-                "  [semantic-ok] "
+                f"  [semantic-ok] "
                 f"{identifier}"
             )
 
@@ -2652,7 +3174,6 @@ def validate_fail_examples(
         dict[str, Any]
     ],
 ) -> bool:
-
     success = True
 
     pass_registry = build_registry(
@@ -2670,7 +3191,6 @@ def validate_fail_examples(
     )
 
     for path in paths:
-
         print(
             f"- "
             f"{path.relative_to(ROOT)}"
@@ -2682,7 +3202,6 @@ def validate_fail_examples(
             )
 
         except Exception as exc:
-
             print(
                 "  [expected-failure] "
                 f"load-error: {exc}"
@@ -2696,7 +3215,6 @@ def validate_fail_examples(
         )
 
         if errors:
-
             print(
                 "  "
                 "[expected-schema-failure]"
@@ -2715,7 +3233,6 @@ def validate_fail_examples(
         )
 
         if semantic:
-
             print(
                 "  "
                 "[expected-semantic-failure]"
@@ -2738,20 +3255,15 @@ def validate_fail_examples(
 
 
 def main() -> int:
-
     print(
-        "=== Causal Trace "
-        "Reconstruction Protocol "
-        "v0.3 Validation ==="
+        "=== Causal Trace Reconstruction Protocol "
+        "v0.4 Validation ==="
     )
 
     try:
-        validators = (
-            load_validators()
-        )
+        validators = load_validators()
 
     except Exception as exc:
-
         print(
             "[fatal] failed to "
             "load schemas: "
@@ -2764,7 +3276,6 @@ def main() -> int:
         record_type,
         filename,
     ) in SCHEMA_FILES.items():
-
         print(
             f"schema "
             f"[{record_type}]: "
@@ -2789,7 +3300,6 @@ def main() -> int:
         pass_ok
         and fail_ok
     ):
-
         print(
             "\n[validation-ok]"
         )
