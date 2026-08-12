@@ -1,0 +1,47 @@
+schema_version: "0.3.0"
+record_type: temporal-precedence-assessment
+
+assessment_id: temporal-workload-001
+reconstruction_id: recon-thermal-002
+hypothesis_id: hypothesis.workload-saturation
+
+reference_clock: UTC
+
+events:
+
+  - event_id: event.workload-high
+    state_id: state.workload-high
+    description: Workload saturation may have occurred.
+    timing:
+      kind: unknown
+      rationale: No workload timing measurement is available.
+    evidence_refs: []
+
+  - event_id: event.service-throttled
+    state_id: state.service-throttled
+    description: Service execution rate was throttled.
+    timing:
+      kind: exact
+      at: "2026-08-12T00:00:04Z"
+    evidence_refs:
+      - ev-003
+
+precedence_constraints:
+
+  - constraint_id: precedence-workload-001
+    cause_event_id: event.workload-high
+    effect_event_id: event.service-throttled
+    relation: strict-before
+    rationale: >
+      Workload saturation would need to occur before throttling
+      if it were the causal mechanism.
+
+violations: []
+
+unresolved_constraints:
+  - precedence-workload-001
+
+assessment_status: insufficient-temporal-evidence
+confidence: 0.25
+
+assessed_at: "2026-08-12T00:03:15Z"
