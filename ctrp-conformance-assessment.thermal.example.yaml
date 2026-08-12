@@ -1,0 +1,97 @@
+schema_version: "0.5.0"
+record_type: ctrp-conformance-assessment
+
+conformance_id: conformance-thermal-001
+reconstruction_id: recon-thermal-002
+hypothesis_id: hypothesis.thermal-protection
+validation_id: validation-thermal-004
+
+required_stage_checks:
+
+  - stage: observation
+    status: present
+    record_refs:
+      - obs-thermal-001
+    rationale: Source observation is available.
+
+  - stage: forward-trace
+    status: present
+    record_refs:
+      - fwd-thermal-001
+    rationale: Cause-forward reasoning is available.
+
+  - stage: backward-trace
+    status: present
+    record_refs:
+      - bwd-thermal-001
+    rationale: Outcome-backward reasoning is available.
+
+  - stage: reconstruction
+    status: present
+    record_refs:
+      - recon-thermal-002
+    rationale: Candidate causal reconstruction is available.
+
+  - stage: temporal-assessment
+    status: present
+    record_refs:
+      - temporal-thermal-001
+    rationale: Temporal precedence was evaluated.
+
+  - stage: hypothesis-comparison
+    status: present
+    record_refs:
+      - comparison-thermal-001
+    rationale: Competing hypotheses were compared.
+
+  - stage: counterfactual-branching
+    status: present
+    record_refs:
+      - cf-thermal-necessity-001
+      - cf-thermal-sufficiency-001
+    rationale: Necessity and sufficiency branches were evaluated.
+
+  - stage: necessity-sufficiency
+    status: present
+    record_refs:
+      - ns-thermal-001
+    rationale: Causal role was assessed.
+
+  - stage: causal-validation
+    status: present
+    record_refs:
+      - validation-thermal-004
+    rationale: Final causal hypothesis validation is available.
+
+bypass_checks:
+
+  - rule_id: CTRP-BYPASS-001
+    status: passed
+    description: Validation references an existing reconstruction.
+
+  - rule_id: CTRP-BYPASS-002
+    status: passed
+    description: Supported validation includes temporal assessment.
+
+  - rule_id: CTRP-BYPASS-003
+    status: passed
+    description: Supported validation includes counterfactual branches.
+
+  - rule_id: CTRP-BYPASS-004
+    status: passed
+    description: Supported validation includes necessity/sufficiency assessment.
+
+  - rule_id: CTRP-BYPASS-006
+    status: passed
+    description: No record promotes the causal hypothesis to proven causality.
+
+reference_integrity:
+  status: valid
+  checked_refs: 11
+  broken_refs: []
+
+conformance_status: conformant
+
+blocking_issues: []
+
+assessed_at: "2026-08-12T04:00:00Z"
