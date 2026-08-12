@@ -1,45 +1,55 @@
-schema_version: "0.1.0"
+schema_version: "0.2.0"
 record_type: causal-validation
-validation_id: validation-thermal-001
-reconstruction_id: recon-thermal-001
+
+validation_id: validation-thermal-002
+reconstruction_id: recon-thermal-002
+hypothesis_id: hypothesis.thermal-protection
+comparison_id: comparison-thermal-001
 
 evidence_checks:
-  - check_id: evidence-check-001
+
+  - check_id: check-001
     evidence_ref: ev-001
     assessment: supports
-    rationale: The temperature threshold violation was directly measured.
+    rationale: >
+      The device temperature exceeded the configured thermal threshold.
 
-  - check_id: evidence-check-002
+  - check_id: check-002
     evidence_ref: ev-002
     assessment: supports
-    rationale: The controller log directly records thermal protection activation.
+    rationale: >
+      The protection-controller log records thermal activation.
 
-  - check_id: evidence-check-003
+  - check_id: check-003
     evidence_ref: ev-003
     assessment: supports
-    rationale: Throughput reduction followed controller activation.
+    rationale: >
+      Service throughput dropped after controller activation.
 
 counterfactual_tests:
-  - test_id: cf-001
-    intervention: Keep device temperature below the configured protection threshold.
-    expected_if_hypothesis_true: Thermal protection should not activate and thermal throttling should not occur.
-    observed_or_simulated_result: Under the controlled test condition, protection did not activate and throttling did not occur.
+
+  - test_id: cf-thermal-001
+    intervention: >
+      Keep device temperature below the configured thermal threshold.
+    expected_if_hypothesis_true: >
+      Thermal protection should not activate and thermal throttling
+      should not occur.
+    observed_or_simulated_result: >
+      Protection did not activate and the corresponding throttling
+      event did not occur.
     supports_hypothesis: true
     confidence: 0.91
 
-alternative_hypotheses:
-  - hypothesis_id: alt-001
-    description: Service throttling was caused by workload saturation rather than thermal protection.
-    confidence: 0.24
-    status: less-supported
+competing_hypothesis_refs:
+  - hypothesis.workload-saturation
 
 conclusion:
   status: supported
-  confidence: 0.89
+  confidence: 0.90
   rationale: >
-    Forward and backward traces converge, controller evidence supports the
-    proposed mechanism, and the counterfactual test behaves as predicted.
+    Trace convergence, direct evidence, comparative analysis and
+    counterfactual testing support the thermal-protection hypothesis.
   blocking_issues:
-    - Exact hardware-controller latency remains unresolved.
+    - Exact controller propagation latency remains unresolved.
 
-validated_at: "2026-08-11T00:04:00Z"
+validated_at: "2026-08-12T00:04:00Z"
