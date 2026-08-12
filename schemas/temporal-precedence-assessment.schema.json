@@ -1,0 +1,277 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "urn:causal-trace-reconstruction-protocol:schema:temporal-precedence-assessment:0.3.0",
+  "title": "Temporal Precedence Assessment",
+  "type": "object",
+  "additionalProperties": false,
+  "required": [
+    "schema_version",
+    "record_type",
+    "assessment_id",
+    "reconstruction_id",
+    "hypothesis_id",
+    "reference_clock",
+    "events",
+    "precedence_constraints",
+    "violations",
+    "unresolved_constraints",
+    "assessment_status",
+    "confidence",
+    "assessed_at"
+  ],
+  "properties": {
+    "schema_version": {
+      "const": "0.3.0"
+    },
+    "record_type": {
+      "const": "temporal-precedence-assessment"
+    },
+    "assessment_id": {
+      "type": "string",
+      "minLength": 1
+    },
+    "reconstruction_id": {
+      "type": "string",
+      "minLength": 1
+    },
+    "hypothesis_id": {
+      "type": "string",
+      "minLength": 1
+    },
+    "reference_clock": {
+      "type": "string",
+      "minLength": 1
+    },
+    "events": {
+      "type": "array",
+      "minItems": 2,
+      "items": {
+        "$ref": "#/$defs/temporalEvent"
+      }
+    },
+    "precedence_constraints": {
+      "type": "array",
+      "minItems": 1,
+      "items": {
+        "$ref": "#/$defs/precedenceConstraint"
+      }
+    },
+    "violations": {
+      "type": "array",
+      "items": {
+        "$ref": "#/$defs/violation"
+      }
+    },
+    "unresolved_constraints": {
+      "type": "array",
+      "uniqueItems": true,
+      "items": {
+        "type": "string",
+        "minLength": 1
+      }
+    },
+    "assessment_status": {
+      "enum": [
+        "consistent",
+        "partially-ordered",
+        "violated",
+        "insufficient-temporal-evidence"
+      ]
+    },
+    "confidence": {
+      "type": "number",
+      "minimum": 0,
+      "maximum": 1
+    },
+    "assessed_at": {
+      "type": "string",
+      "format": "date-time"
+    }
+  },
+  "$defs": {
+    "temporalEvent": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "event_id",
+        "state_id",
+        "description",
+        "timing",
+        "evidence_refs"
+      ],
+      "properties": {
+        "event_id": {
+          "type": "string",
+          "minLength": 1
+        },
+        "state_id": {
+          "type": "string",
+          "minLength": 1
+        },
+        "description": {
+          "type": "string",
+          "minLength": 1
+        },
+        "timing": {
+          "$ref": "#/$defs/timing"
+        },
+        "evidence_refs": {
+          "type": "array",
+          "uniqueItems": true,
+          "items": {
+            "type": "string",
+            "minLength": 1
+          }
+        }
+      }
+    },
+    "timing": {
+      "oneOf": [
+        {
+          "type": "object",
+          "additionalProperties": false,
+          "required": [
+            "kind",
+            "at"
+          ],
+          "properties": {
+            "kind": {
+              "const": "exact"
+            },
+            "at": {
+              "type": "string",
+              "format": "date-time"
+            }
+          }
+        },
+        {
+          "type": "object",
+          "additionalProperties": false,
+          "required": [
+            "kind",
+            "earliest_at",
+            "latest_at"
+          ],
+          "properties": {
+            "kind": {
+              "const": "interval"
+            },
+            "earliest_at": {
+              "type": "string",
+              "format": "date-time"
+            },
+            "latest_at": {
+              "type": "string",
+              "format": "date-time"
+            }
+          }
+        },
+        {
+          "type": "object",
+          "additionalProperties": false,
+          "required": [
+            "kind",
+            "rationale"
+          ],
+          "properties": {
+            "kind": {
+              "const": "unknown"
+            },
+            "rationale": {
+              "type": "string",
+              "minLength": 1
+            }
+          }
+        }
+      ]
+    },
+    "precedenceConstraint": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "constraint_id",
+        "cause_event_id",
+        "effect_event_id",
+        "relation",
+        "rationale"
+      ],
+      "properties": {
+        "constraint_id": {
+          "type": "string",
+          "minLength": 1
+        },
+        "cause_event_id": {
+          "type": "string",
+          "minLength": 1
+        },
+        "effect_event_id": {
+          "type": "string",
+          "minLength": 1
+        },
+        "relation": {
+          "enum": [
+            "strict-before",
+            "before-or-equal"
+          ]
+        },
+        "causal_window": {
+          "$ref": "#/$defs/causalWindow"
+        },
+        "rationale": {
+          "type": "string",
+          "minLength": 1
+        }
+      }
+    },
+    "causalWindow": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "min_lag_seconds",
+        "max_lag_seconds"
+      ],
+      "properties": {
+        "min_lag_seconds": {
+          "type": "number",
+          "minimum": 0
+        },
+        "max_lag_seconds": {
+          "type": "number",
+          "minimum": 0
+        }
+      }
+    },
+    "violation": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "violation_id",
+        "constraint_id",
+        "description",
+        "evidence_refs"
+      ],
+      "properties": {
+        "violation_id": {
+          "type": "string",
+          "minLength": 1
+        },
+        "constraint_id": {
+          "type": "string",
+          "minLength": 1
+        },
+        "description": {
+          "type": "string",
+          "minLength": 1
+        },
+        "evidence_refs": {
+          "type": "array",
+          "uniqueItems": true,
+          "items": {
+            "type": "string",
+            "minLength": 1
+          }
+        }
+      }
+    }
+  }
+}
