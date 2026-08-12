@@ -1,0 +1,275 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "urn:causal-trace-reconstruction-protocol:schema:counterfactual-branch:0.4.0",
+  "title": "Counterfactual Branch",
+  "description": "Represents a counterfactual causal branch created by intervening on a reconstructed causal hypothesis and tracing the resulting hypothetical or experimental outcome.",
+  "type": "object",
+  "additionalProperties": false,
+
+  "required": [
+    "schema_version",
+    "record_type",
+    "branch_id",
+    "reconstruction_id",
+    "hypothesis_id",
+    "temporal_assessment_id",
+    "test_type",
+    "intervention",
+    "baseline_outcome",
+    "branch_steps",
+    "counterfactual_outcome",
+    "branch_conclusion",
+    "branch_status",
+    "generated_at"
+  ],
+
+  "properties": {
+    "schema_version": {
+      "const": "0.4.0"
+    },
+
+    "record_type": {
+      "const": "counterfactual-branch"
+    },
+
+    "branch_id": {
+      "type": "string",
+      "minLength": 1
+    },
+
+    "reconstruction_id": {
+      "type": "string",
+      "minLength": 1
+    },
+
+    "hypothesis_id": {
+      "type": "string",
+      "minLength": 1
+    },
+
+    "temporal_assessment_id": {
+      "type": "string",
+      "minLength": 1
+    },
+
+    "test_type": {
+      "enum": [
+        "necessity",
+        "sufficiency",
+        "alternative-mechanism"
+      ]
+    },
+
+    "intervention": {
+      "$ref": "#/$defs/intervention"
+    },
+
+    "baseline_outcome": {
+      "$ref": "#/$defs/outcome"
+    },
+
+    "branch_steps": {
+      "type": "array",
+      "items": {
+        "$ref": "#/$defs/branchStep"
+      }
+    },
+
+    "counterfactual_outcome": {
+      "$ref": "#/$defs/outcome"
+    },
+
+    "branch_conclusion": {
+      "$ref": "#/$defs/branchConclusion"
+    },
+
+    "branch_status": {
+      "enum": [
+        "completed",
+        "partial",
+        "invalid-intervention",
+        "insufficient-evidence"
+      ]
+    },
+
+    "generated_at": {
+      "type": "string",
+      "format": "date-time"
+    }
+  },
+
+  "$defs": {
+    "intervention": {
+      "type": "object",
+      "additionalProperties": false,
+
+      "required": [
+        "intervention_id",
+        "mode",
+        "target_state_id",
+        "description",
+        "rationale"
+      ],
+
+      "properties": {
+        "intervention_id": {
+          "type": "string",
+          "minLength": 1
+        },
+
+        "mode": {
+          "enum": [
+            "suppress",
+            "force",
+            "replace",
+            "hold-constant"
+          ]
+        },
+
+        "target_state_id": {
+          "type": "string",
+          "minLength": 1
+        },
+
+        "description": {
+          "type": "string",
+          "minLength": 1
+        },
+
+        "rationale": {
+          "type": "string",
+          "minLength": 1
+        }
+      }
+    },
+
+    "outcome": {
+      "type": "object",
+      "additionalProperties": false,
+
+      "required": [
+        "state_id",
+        "description",
+        "occurrence"
+      ],
+
+      "properties": {
+        "state_id": {
+          "type": "string",
+          "minLength": 1
+        },
+
+        "description": {
+          "type": "string",
+          "minLength": 1
+        },
+
+        "occurrence": {
+          "enum": [
+            "occurred",
+            "not-occurred",
+            "unknown"
+          ]
+        }
+      }
+    },
+
+    "branchStep": {
+      "type": "object",
+      "additionalProperties": false,
+
+      "required": [
+        "step_id",
+        "from_state_id",
+        "to_state_id",
+        "transition_basis",
+        "confidence",
+        "evidence_refs",
+        "assumptions"
+      ],
+
+      "properties": {
+        "step_id": {
+          "type": "string",
+          "minLength": 1
+        },
+
+        "from_state_id": {
+          "type": "string",
+          "minLength": 1
+        },
+
+        "to_state_id": {
+          "type": "string",
+          "minLength": 1
+        },
+
+        "transition_basis": {
+          "enum": [
+            "observed",
+            "experimental",
+            "simulated",
+            "rule-based",
+            "model-inferred",
+            "mixed"
+          ]
+        },
+
+        "confidence": {
+          "type": "number",
+          "minimum": 0,
+          "maximum": 1
+        },
+
+        "evidence_refs": {
+          "type": "array",
+          "uniqueItems": true,
+          "items": {
+            "type": "string",
+            "minLength": 1
+          }
+        },
+
+        "assumptions": {
+          "type": "array",
+          "items": {
+            "type": "string",
+            "minLength": 1
+          }
+        }
+      }
+    },
+
+    "branchConclusion": {
+      "type": "object",
+      "additionalProperties": false,
+
+      "required": [
+        "assessment",
+        "confidence",
+        "rationale"
+      ],
+
+      "properties": {
+        "assessment": {
+          "enum": [
+            "supports-hypothesis",
+            "contradicts-hypothesis",
+            "inconclusive"
+          ]
+        },
+
+        "confidence": {
+          "type": "number",
+          "minimum": 0,
+          "maximum": 1
+        },
+
+        "rationale": {
+          "type": "string",
+          "minLength": 1
+        }
+      }
+    }
+  }
+}
