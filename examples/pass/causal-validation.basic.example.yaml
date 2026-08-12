@@ -1,10 +1,11 @@
 schema_version: "0.3.0"
 record_type: causal-validation
 
-validation_id: validation-thermal-002
+validation_id: validation-thermal-003
 reconstruction_id: recon-thermal-002
 hypothesis_id: hypothesis.thermal-protection
 comparison_id: comparison-thermal-001
+temporal_assessment_id: temporal-thermal-001
 
 evidence_checks:
 
