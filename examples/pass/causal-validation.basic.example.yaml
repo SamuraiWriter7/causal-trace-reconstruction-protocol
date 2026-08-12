@@ -1,11 +1,13 @@
 schema_version: "0.4.0"
 record_type: causal-validation
 
-validation_id: validation-thermal-003
+validation_id: validation-thermal-004
 reconstruction_id: recon-thermal-002
 hypothesis_id: hypothesis.thermal-protection
+
 comparison_id: comparison-thermal-001
 temporal_assessment_id: temporal-thermal-001
+necessity_sufficiency_assessment_id: ns-thermal-001
 
 evidence_checks:
 
@@ -13,44 +15,34 @@ evidence_checks:
     evidence_ref: ev-001
     assessment: supports
     rationale: >
-      The device temperature exceeded the configured thermal threshold.
+      The thermal threshold violation was directly measured.
 
   - check_id: check-002
     evidence_ref: ev-002
     assessment: supports
     rationale: >
-      The protection-controller log records thermal activation.
+      Protection-controller activation was directly logged.
 
   - check_id: check-003
     evidence_ref: ev-003
     assessment: supports
     rationale: >
-      Service throughput dropped after controller activation.
+      Service throttling followed protection activation.
 
-counterfactual_tests:
-
-  - test_id: cf-thermal-001
-    intervention: >
-      Keep device temperature below the configured thermal threshold.
-    expected_if_hypothesis_true: >
-      Thermal protection should not activate and thermal throttling
-      should not occur.
-    observed_or_simulated_result: >
-      Protection did not activate and the corresponding throttling
-      event did not occur.
-    supports_hypothesis: true
-    confidence: 0.91
+counterfactual_branch_refs:
+  - cf-thermal-necessity-001
+  - cf-thermal-sufficiency-001
 
 competing_hypothesis_refs:
   - hypothesis.workload-saturation
 
 conclusion:
   status: supported
-  confidence: 0.90
+  confidence: 0.94
   rationale: >
-    Trace convergence, direct evidence, comparative analysis and
-    counterfactual testing support the thermal-protection hypothesis.
-  blocking_issues:
-    - Exact controller propagation latency remains unresolved.
+    Structural convergence, evidence support, temporal precedence,
+    counterfactual branching, and necessity/sufficiency assessment
+    support the thermal-protection hypothesis within the declared scope.
+  blocking_issues: []
 
-validated_at: "2026-08-12T00:04:00Z"
+validated_at: "2026-08-12T03:03:00Z"
