@@ -1,44 +1,47 @@
-schema_version: "0.2.0"
+schema_version: "0.3.0"
 record_type: hypothesis-comparison
 
 comparison_id: comparison-thermal-001
 reconstruction_id: recon-thermal-002
 
-scoring_method: ctrp-reference-comparison-v0.2
+scoring_method: ctrp-reference-comparison-v0.3
 
 entries:
 
   - hypothesis_id: hypothesis.thermal-protection
+    temporal_assessment_id: temporal-thermal-001
     path_coherence: 0.96
     evidence_support: 0.94
+    temporal_consistency: 0.97
     contradiction_penalty: 0.02
     gap_penalty: 0.08
-    final_score: 0.89
+    final_score: 0.91
     rank: 1
     rationale: >
-      Forward and backward traces converge on the same mechanism,
-      with direct sensor and controller evidence and no material
-      contradictory evidence.
+      The candidate has strong path convergence, evidence support
+      and temporally consistent ordering.
 
   - hypothesis_id: hypothesis.workload-saturation
+    temporal_assessment_id: temporal-workload-001
     path_coherence: 0.35
     evidence_support: 0.31
+    temporal_consistency: 0.25
     contradiction_penalty: 0.55
     gap_penalty: 0.62
-    final_score: 0.38
+    final_score: 0.30
     rank: 2
     rationale: >
-      Workload saturation remains logically possible but lacks a
-      reconstructed forward path and conflicts with controller evidence.
+      The candidate lacks both a reconstructed forward path and
+      sufficient temporal evidence.
 
 tie_threshold: 0.10
-selection_margin: 0.51
+selection_margin: 0.61
 
 decision:
   status: selected
   selected_hypothesis_id: hypothesis.thermal-protection
   rationale: >
-    The leading hypothesis exceeds the competing hypothesis by more
-    than the configured ambiguity threshold.
+    The leading hypothesis exceeds the ambiguity threshold and
+    contains no temporal-order violation.
 
 compared_at: "2026-08-12T00:03:30Z"
