@@ -1,0 +1,44 @@
+schema_version: "0.1.0"
+record_type: backward-trace
+trace_id: bwd-thermal-001
+observation_id: obs-thermal-001
+direction: outcome-backward
+start_outcome_state_id: state.service-throttled
+
+steps:
+  - step_id: bwd-step-001
+    effect_state:
+      state_id: state.service-throttled
+      description: Service execution rate was throttled.
+    required_prior_state:
+      state_id: state.protection-active
+      description: Thermal protection controller was active.
+    dependency_rationale: In the observed configuration, this form of throttling requires a protection-controller action.
+    inference_basis: rule-based
+    confidence: 0.90
+    evidence_refs:
+      - ev-002
+      - ev-003
+    assumptions:
+      - No independent administrator-issued throttle occurred.
+
+  - step_id: bwd-step-002
+    effect_state:
+      state_id: state.protection-active
+      description: Thermal protection controller was active.
+    required_prior_state:
+      state_id: state.temp-high
+      description: Device temperature exceeded the configured thermal threshold.
+    dependency_rationale: The controller configuration activates thermal protection after a temperature threshold violation.
+    inference_basis: mixed
+    confidence: 0.92
+    evidence_refs:
+      - ev-001
+      - ev-002
+    assumptions:
+      - No manual protection-controller activation occurred.
+
+unresolved_gaps:
+  - Manual controller intervention cannot be excluded solely from the throughput metric.
+
+generated_at: "2026-08-11T00:02:10Z"
