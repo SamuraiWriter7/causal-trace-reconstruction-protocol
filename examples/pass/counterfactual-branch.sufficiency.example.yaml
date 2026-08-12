@@ -1,0 +1,66 @@
+schema_version: "0.4.0"
+record_type: counterfactual-branch
+
+branch_id: cf-thermal-sufficiency-001
+reconstruction_id: recon-thermal-002
+hypothesis_id: hypothesis.thermal-protection
+temporal_assessment_id: temporal-thermal-001
+
+test_type: sufficiency
+
+intervention:
+  intervention_id: intervention-sufficiency-001
+  mode: force
+  target_state_id: state.temp-high
+  description: >
+    Force the device into a controlled state above
+    the configured thermal threshold.
+  rationale: >
+    Introducing the proposed causal state tests whether
+    it can produce the predicted downstream effect
+    under the declared system configuration.
+
+baseline_outcome:
+  state_id: state.service-throttled
+  description: Service throttling before the intervention.
+  occurrence: not-occurred
+
+branch_steps:
+
+  - step_id: cf-sufficiency-step-001
+    from_state_id: state.temp-high
+    to_state_id: state.protection-active
+    transition_basis: experimental
+    confidence: 0.95
+    evidence_refs:
+      - ev-001
+      - ev-002
+    assumptions:
+      - Thermal protection is enabled.
+
+  - step_id: cf-sufficiency-step-002
+    from_state_id: state.protection-active
+    to_state_id: state.service-throttled
+    transition_basis: experimental
+    confidence: 0.93
+    evidence_refs:
+      - ev-002
+      - ev-003
+    assumptions:
+      - No safety override blocks throttling.
+
+counterfactual_outcome:
+  state_id: state.service-throttled
+  description: Service throttling after forcing the thermal condition.
+  occurrence: occurred
+
+branch_conclusion:
+  assessment: supports-hypothesis
+  confidence: 0.93
+  rationale: >
+    Introducing the thermal threshold condition produced
+    protection activation followed by service throttling.
+
+branch_status: completed
+
+generated_at: "2026-08-12T03:01:00Z"
