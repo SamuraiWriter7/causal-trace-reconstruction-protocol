@@ -1,6 +1,6 @@
 {
   "$schema": "https://json-schema.org/draft/2020-12/schema",
-  "$id": "urn:causal-trace-reconstruction-protocol:schema:causal-validation:0.1.0",
+  "$id": "urn:causal-trace-reconstruction-protocol:schema:causal-validation:0.2.0",
   "title": "Causal Validation",
   "type": "object",
   "additionalProperties": false,
@@ -9,15 +9,16 @@
     "record_type",
     "validation_id",
     "reconstruction_id",
+    "hypothesis_id",
     "evidence_checks",
     "counterfactual_tests",
-    "alternative_hypotheses",
+    "competing_hypothesis_refs",
     "conclusion",
     "validated_at"
   ],
   "properties": {
     "schema_version": {
-      "const": "0.1.0"
+      "const": "0.2.0"
     },
     "record_type": {
       "const": "causal-validation"
@@ -27,6 +28,14 @@
       "minLength": 1
     },
     "reconstruction_id": {
+      "type": "string",
+      "minLength": 1
+    },
+    "hypothesis_id": {
+      "type": "string",
+      "minLength": 1
+    },
+    "comparison_id": {
       "type": "string",
       "minLength": 1
     },
@@ -43,10 +52,12 @@
         "$ref": "#/$defs/counterfactualTest"
       }
     },
-    "alternative_hypotheses": {
+    "competing_hypothesis_refs": {
       "type": "array",
+      "uniqueItems": true,
       "items": {
-        "$ref": "#/$defs/alternativeHypothesis"
+        "type": "string",
+        "minLength": 1
       }
     },
     "conclusion": {
@@ -125,39 +136,6 @@
           "type": "number",
           "minimum": 0,
           "maximum": 1
-        }
-      }
-    },
-    "alternativeHypothesis": {
-      "type": "object",
-      "additionalProperties": false,
-      "required": [
-        "hypothesis_id",
-        "description",
-        "confidence",
-        "status"
-      ],
-      "properties": {
-        "hypothesis_id": {
-          "type": "string",
-          "minLength": 1
-        },
-        "description": {
-          "type": "string",
-          "minLength": 1
-        },
-        "confidence": {
-          "type": "number",
-          "minimum": 0,
-          "maximum": 1
-        },
-        "status": {
-          "enum": [
-            "open",
-            "less-supported",
-            "competitive",
-            "rejected"
-          ]
         }
       }
     },
