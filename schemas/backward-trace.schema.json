@@ -1,0 +1,142 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "urn:causal-trace-reconstruction-protocol:schema:backward-trace:0.1.0",
+  "title": "Backward Trace",
+  "type": "object",
+  "additionalProperties": false,
+  "required": [
+    "schema_version",
+    "record_type",
+    "trace_id",
+    "observation_id",
+    "direction",
+    "start_outcome_state_id",
+    "steps",
+    "unresolved_gaps",
+    "generated_at"
+  ],
+  "properties": {
+    "schema_version": {
+      "const": "0.1.0"
+    },
+    "record_type": {
+      "const": "backward-trace"
+    },
+    "trace_id": {
+      "type": "string",
+      "minLength": 1
+    },
+    "observation_id": {
+      "type": "string",
+      "minLength": 1
+    },
+    "direction": {
+      "const": "outcome-backward"
+    },
+    "start_outcome_state_id": {
+      "type": "string",
+      "minLength": 1
+    },
+    "steps": {
+      "type": "array",
+      "minItems": 1,
+      "items": {
+        "$ref": "#/$defs/backwardStep"
+      }
+    },
+    "unresolved_gaps": {
+      "type": "array",
+      "items": {
+        "type": "string",
+        "minLength": 1
+      }
+    },
+    "generated_at": {
+      "type": "string",
+      "format": "date-time"
+    }
+  },
+  "$defs": {
+    "backwardStep": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "step_id",
+        "effect_state",
+        "required_prior_state",
+        "dependency_rationale",
+        "inference_basis",
+        "confidence",
+        "evidence_refs",
+        "assumptions"
+      ],
+      "properties": {
+        "step_id": {
+          "type": "string",
+          "minLength": 1
+        },
+        "effect_state": {
+          "$ref": "#/$defs/state"
+        },
+        "required_prior_state": {
+          "$ref": "#/$defs/state"
+        },
+        "dependency_rationale": {
+          "type": "string",
+          "minLength": 1
+        },
+        "inference_basis": {
+          "$ref": "#/$defs/inferenceBasis"
+        },
+        "confidence": {
+          "type": "number",
+          "minimum": 0,
+          "maximum": 1
+        },
+        "evidence_refs": {
+          "type": "array",
+          "uniqueItems": true,
+          "items": {
+            "type": "string",
+            "minLength": 1
+          }
+        },
+        "assumptions": {
+          "type": "array",
+          "items": {
+            "type": "string",
+            "minLength": 1
+          }
+        }
+      }
+    },
+    "state": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "state_id",
+        "description"
+      ],
+      "properties": {
+        "state_id": {
+          "type": "string",
+          "minLength": 1
+        },
+        "description": {
+          "type": "string",
+          "minLength": 1
+        }
+      }
+    },
+    "inferenceBasis": {
+      "enum": [
+        "observed",
+        "rule-based",
+        "statistical",
+        "analogical",
+        "model-inferred",
+        "mixed"
+      ]
+    }
+  }
+}
