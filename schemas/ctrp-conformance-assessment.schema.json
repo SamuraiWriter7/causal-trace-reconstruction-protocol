@@ -1,0 +1,199 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "urn:causal-trace-reconstruction-protocol:schema:ctrp-conformance-assessment:0.5.0",
+  "title": "CTRP Conformance Assessment",
+  "description": "Assesses whether a causal reconstruction workflow conforms to the required CTRP end-to-end record and semantic relationships.",
+  "type": "object",
+  "additionalProperties": false,
+
+  "required": [
+    "schema_version",
+    "record_type",
+    "conformance_id",
+    "reconstruction_id",
+    "hypothesis_id",
+    "validation_id",
+    "required_stage_checks",
+    "bypass_checks",
+    "reference_integrity",
+    "conformance_status",
+    "blocking_issues",
+    "assessed_at"
+  ],
+
+  "properties": {
+    "schema_version": {
+      "const": "0.5.0"
+    },
+
+    "record_type": {
+      "const": "ctrp-conformance-assessment"
+    },
+
+    "conformance_id": {
+      "type": "string",
+      "minLength": 1
+    },
+
+    "reconstruction_id": {
+      "type": "string",
+      "minLength": 1
+    },
+
+    "hypothesis_id": {
+      "type": "string",
+      "minLength": 1
+    },
+
+    "validation_id": {
+      "type": "string",
+      "minLength": 1
+    },
+
+    "required_stage_checks": {
+      "type": "array",
+      "minItems": 1,
+      "items": {
+        "$ref": "#/$defs/stageCheck"
+      }
+    },
+
+    "bypass_checks": {
+      "type": "array",
+      "minItems": 1,
+      "items": {
+        "$ref": "#/$defs/bypassCheck"
+      }
+    },
+
+    "reference_integrity": {
+      "$ref": "#/$defs/referenceIntegrity"
+    },
+
+    "conformance_status": {
+      "enum": [
+        "conformant",
+        "non-conformant",
+        "incomplete"
+      ]
+    },
+
+    "blocking_issues": {
+      "type": "array",
+      "items": {
+        "type": "string",
+        "minLength": 1
+      }
+    },
+
+    "assessed_at": {
+      "type": "string",
+      "format": "date-time"
+    }
+  },
+
+  "$defs": {
+    "stageCheck": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "stage",
+        "status",
+        "record_refs",
+        "rationale"
+      ],
+      "properties": {
+        "stage": {
+          "enum": [
+            "observation",
+            "forward-trace",
+            "backward-trace",
+            "reconstruction",
+            "temporal-assessment",
+            "hypothesis-comparison",
+            "counterfactual-branching",
+            "necessity-sufficiency",
+            "causal-validation"
+          ]
+        },
+        "status": {
+          "enum": [
+            "present",
+            "missing",
+            "not-required",
+            "invalid"
+          ]
+        },
+        "record_refs": {
+          "type": "array",
+          "uniqueItems": true,
+          "items": {
+            "type": "string",
+            "minLength": 1
+          }
+        },
+        "rationale": {
+          "type": "string",
+          "minLength": 1
+        }
+      }
+    },
+
+    "bypassCheck": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "rule_id",
+        "status",
+        "description"
+      ],
+      "properties": {
+        "rule_id": {
+          "type": "string",
+          "minLength": 1
+        },
+        "status": {
+          "enum": [
+            "passed",
+            "failed",
+            "not-applicable"
+          ]
+        },
+        "description": {
+          "type": "string",
+          "minLength": 1
+        }
+      }
+    },
+
+    "referenceIntegrity": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "status",
+        "checked_refs",
+        "broken_refs"
+      ],
+      "properties": {
+        "status": {
+          "enum": [
+            "valid",
+            "invalid"
+          ]
+        },
+        "checked_refs": {
+          "type": "integer",
+          "minimum": 0
+        },
+        "broken_refs": {
+          "type": "array",
+          "uniqueItems": true,
+          "items": {
+            "type": "string",
+            "minLength": 1
+          }
+        }
+      }
+    }
+  }
+}
