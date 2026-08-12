@@ -1,6 +1,6 @@
 {
   "$schema": "https://json-schema.org/draft/2020-12/schema",
-  "$id": "urn:causal-trace-reconstruction-protocol:schema:counterfactual-branch:0.4.0",
+  "$id": "urn:causal-trace-reconstruction-protocol:schema:counterfactual-branch:0.5.0",
   "title": "Counterfactual Branch",
   "description": "Represents a counterfactual causal branch created by intervening on a reconstructed causal hypothesis and tracing the resulting hypothetical or experimental outcome.",
   "type": "object",
@@ -25,7 +25,7 @@
 
   "properties": {
     "schema_version": {
-      "const": "0.4.0"
+      "const": "0.5.0"
     },
 
     "record_type": {
