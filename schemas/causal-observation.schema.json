@@ -1,6 +1,6 @@
 {
   "$schema": "https://json-schema.org/draft/2020-12/schema",
-  "$id": "urn:causal-trace-reconstruction-protocol:schema:causal-observation:0.2.0",
+  "$id": "urn:causal-trace-reconstruction-protocol:schema:causal-observation:0.3.0",
   "title": "Causal Observation",
   "type": "object",
   "additionalProperties": false,
@@ -15,7 +15,7 @@
   ],
   "properties": {
     "schema_version": {
-      "const": "0.2.0"
+      "const": "0.3.0"
     },
     "record_type": {
       "const": "causal-observation"
