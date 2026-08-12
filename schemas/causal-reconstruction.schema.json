@@ -1,6 +1,6 @@
 {
   "$schema": "https://json-schema.org/draft/2020-12/schema",
-  "$id": "urn:causal-trace-reconstruction-protocol:schema:causal-reconstruction:0.1.0",
+  "$id": "urn:causal-trace-reconstruction-protocol:schema:causal-reconstruction:0.2.0",
   "title": "Causal Reconstruction",
   "type": "object",
   "additionalProperties": false,
@@ -9,19 +9,17 @@
     "record_type",
     "reconstruction_id",
     "observation_id",
-    "forward_trace_id",
-    "backward_trace_id",
+    "forward_trace_ids",
+    "backward_trace_ids",
     "claim_level",
-    "meeting_points",
-    "candidate_path",
+    "candidate_hypotheses",
     "reconstruction_status",
-    "confidence",
     "unresolved_gaps",
     "created_at"
   ],
   "properties": {
     "schema_version": {
-      "const": "0.1.0"
+      "const": "0.2.0"
     },
     "record_type": {
       "const": "causal-reconstruction"
@@ -34,44 +32,40 @@
       "type": "string",
       "minLength": 1
     },
-    "forward_trace_id": {
-      "type": "string",
-      "minLength": 1
+    "forward_trace_ids": {
+      "type": "array",
+      "minItems": 1,
+      "uniqueItems": true,
+      "items": {
+        "type": "string",
+        "minLength": 1
+      }
     },
-    "backward_trace_id": {
-      "type": "string",
-      "minLength": 1
+    "backward_trace_ids": {
+      "type": "array",
+      "minItems": 1,
+      "uniqueItems": true,
+      "items": {
+        "type": "string",
+        "minLength": 1
+      }
     },
     "claim_level": {
       "const": "hypothesis"
     },
-    "causal_hypothesis": {
-      "type": "string",
-      "minLength": 1
-    },
-    "meeting_points": {
+    "candidate_hypotheses": {
       "type": "array",
       "items": {
-        "$ref": "#/$defs/meetingPoint"
-      }
-    },
-    "candidate_path": {
-      "type": "array",
-      "items": {
-        "$ref": "#/$defs/pathSegment"
+        "$ref": "#/$defs/candidateHypothesis"
       }
     },
     "reconstruction_status": {
       "enum": [
         "converged",
         "partial",
+        "ambiguous",
         "no-convergence"
       ]
-    },
-    "confidence": {
-      "type": "number",
-      "minimum": 0,
-      "maximum": 1
     },
     "unresolved_gaps": {
       "type": "array",
@@ -86,6 +80,75 @@
     }
   },
   "$defs": {
+    "candidateHypothesis": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "hypothesis_id",
+        "statement",
+        "meeting_points",
+        "candidate_path",
+        "evidence_refs",
+        "contradictions",
+        "unresolved_gaps",
+        "confidence",
+        "status"
+      ],
+      "properties": {
+        "hypothesis_id": {
+          "type": "string",
+          "minLength": 1
+        },
+        "statement": {
+          "type": "string",
+          "minLength": 1
+        },
+        "meeting_points": {
+          "type": "array",
+          "items": {
+            "$ref": "#/$defs/meetingPoint"
+          }
+        },
+        "candidate_path": {
+          "type": "array",
+          "items": {
+            "$ref": "#/$defs/pathSegment"
+          }
+        },
+        "evidence_refs": {
+          "type": "array",
+          "uniqueItems": true,
+          "items": {
+            "type": "string",
+            "minLength": 1
+          }
+        },
+        "contradictions": {
+          "type": "array",
+          "items": {
+            "$ref": "#/$defs/contradiction"
+          }
+        },
+        "unresolved_gaps": {
+          "type": "array",
+          "items": {
+            "type": "string",
+            "minLength": 1
+          }
+        },
+        "confidence": {
+          "type": "number",
+          "minimum": 0,
+          "maximum": 1
+        },
+        "status": {
+          "enum": [
+            "active",
+            "rejected"
+          ]
+        }
+      }
+    },
     "meetingPoint": {
       "type": "object",
       "additionalProperties": false,
@@ -95,8 +158,7 @@
         "backward_step_id",
         "state_id",
         "match_score",
-        "rationale",
-        "contradictions"
+        "rationale"
       ],
       "properties": {
         "meeting_point_id": {
@@ -123,13 +185,6 @@
         "rationale": {
           "type": "string",
           "minLength": 1
-        },
-        "contradictions": {
-          "type": "array",
-          "items": {
-            "type": "string",
-            "minLength": 1
-          }
         }
       }
     },
@@ -157,7 +212,33 @@
         },
         "basis_step_refs": {
           "type": "array",
-          "minItems": 1,
+          "uniqueItems": true,
+          "items": {
+            "type": "string",
+            "minLength": 1
+          }
+        }
+      }
+    },
+    "contradiction": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "contradiction_id",
+        "description",
+        "evidence_refs"
+      ],
+      "properties": {
+        "contradiction_id": {
+          "type": "string",
+          "minLength": 1
+        },
+        "description": {
+          "type": "string",
+          "minLength": 1
+        },
+        "evidence_refs": {
+          "type": "array",
           "uniqueItems": true,
           "items": {
             "type": "string",
