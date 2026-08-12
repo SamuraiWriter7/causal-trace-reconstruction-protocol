@@ -1,0 +1,38 @@
+schema_version: "0.1.0"
+record_type: causal-observation
+observation_id: obs-thermal-001
+
+origin:
+  state_id: state.temp-high
+  description: Device temperature exceeded the configured thermal threshold.
+  observed_at: "2026-08-11T00:00:00Z"
+
+outcome:
+  state_id: state.service-throttled
+  description: Service execution rate was automatically throttled.
+  observed_at: "2026-08-11T00:00:04Z"
+
+evidence:
+  - evidence_id: ev-001
+    kind: measurement
+    description: Temperature sensor recorded a threshold violation.
+    source_ref: sensor://thermal/primary
+    reliability: 0.98
+
+  - evidence_id: ev-002
+    kind: log
+    description: Protection controller recorded a thermal protection activation.
+    source_ref: log://controller/protection
+    reliability: 0.97
+
+  - evidence_id: ev-003
+    kind: measurement
+    description: Service throughput dropped immediately after controller activation.
+    source_ref: metric://service/throughput
+    reliability: 0.95
+
+context:
+  environment: test-system
+  reconstruction_reason: explain-throttling
+
+recorded_at: "2026-08-11T00:01:00Z"
