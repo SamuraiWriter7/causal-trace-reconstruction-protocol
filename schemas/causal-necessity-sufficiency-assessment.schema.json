@@ -1,0 +1,125 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "urn:causal-trace-reconstruction-protocol:schema:causal-necessity-sufficiency-assessment:0.4.0",
+  "title": "Causal Necessity Sufficiency Assessment",
+  "description": "Assesses whether a reconstructed causal factor is supported as necessary, sufficient, both, neither, or unresolved within a declared evaluation scope.",
+  "type": "object",
+  "additionalProperties": false,
+
+  "required": [
+    "schema_version",
+    "record_type",
+    "assessment_id",
+    "reconstruction_id",
+    "hypothesis_id",
+    "evaluation_scope",
+    "claim_level",
+    "necessity",
+    "sufficiency",
+    "causal_role",
+    "assessed_at"
+  ],
+
+  "properties": {
+    "schema_version": {
+      "const": "0.4.0"
+    },
+
+    "record_type": {
+      "const": "causal-necessity-sufficiency-assessment"
+    },
+
+    "assessment_id": {
+      "type": "string",
+      "minLength": 1
+    },
+
+    "reconstruction_id": {
+      "type": "string",
+      "minLength": 1
+    },
+
+    "hypothesis_id": {
+      "type": "string",
+      "minLength": 1
+    },
+
+    "evaluation_scope": {
+      "type": "string",
+      "minLength": 1,
+      "description": "Declares the system, configuration, environment, population, or other scope within which necessity and sufficiency are being assessed."
+    },
+
+    "claim_level": {
+      "const": "hypothesis"
+    },
+
+    "necessity": {
+      "$ref": "#/$defs/roleAssessment"
+    },
+
+    "sufficiency": {
+      "$ref": "#/$defs/roleAssessment"
+    },
+
+    "causal_role": {
+      "enum": [
+        "necessary-and-sufficient",
+        "necessary-only",
+        "sufficient-only",
+        "neither-supported",
+        "undetermined"
+      ]
+    },
+
+    "assessed_at": {
+      "type": "string",
+      "format": "date-time"
+    }
+  },
+
+  "$defs": {
+    "roleAssessment": {
+      "type": "object",
+      "additionalProperties": false,
+
+      "required": [
+        "status",
+        "branch_refs",
+        "confidence",
+        "rationale"
+      ],
+
+      "properties": {
+        "status": {
+          "enum": [
+            "supported",
+            "not-supported",
+            "undetermined",
+            "not-tested"
+          ]
+        },
+
+        "branch_refs": {
+          "type": "array",
+          "uniqueItems": true,
+          "items": {
+            "type": "string",
+            "minLength": 1
+          }
+        },
+
+        "confidence": {
+          "type": "number",
+          "minimum": 0,
+          "maximum": 1
+        },
+
+        "rationale": {
+          "type": "string",
+          "minLength": 1
+        }
+      }
+    }
+  }
+}
